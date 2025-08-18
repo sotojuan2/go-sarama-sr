@@ -8,22 +8,22 @@ import (
 
 // Config holds all configuration for the Kafka producer application
 type Config struct {
-	Kafka        KafkaConfig
+	Kafka          KafkaConfig
 	SchemaRegistry SchemaRegistryConfig
-	App          AppConfig
+	App            AppConfig
 }
 
 // KafkaConfig contains Kafka-specific configuration
 type KafkaConfig struct {
 	BootstrapServers string
-	APIKey          string
-	APISecret       string
-	Topic           string
-	Timeout         time.Duration
-	RetryMax        int
-	RequiredAcks    int
-	Compression     string
-	BatchSize       int
+	APIKey           string
+	APISecret        string
+	Topic            string
+	Timeout          time.Duration
+	RetryMax         int
+	RequiredAcks     int
+	Compression      string
+	BatchSize        int
 }
 
 // SchemaRegistryConfig contains Schema Registry configuration
@@ -45,14 +45,14 @@ func LoadConfig() (*Config, error) {
 	config := &Config{
 		Kafka: KafkaConfig{
 			BootstrapServers: getEnvOrDefault("KAFKA_BOOTSTRAP_SERVERS", ""),
-			APIKey:          getEnvOrDefault("KAFKA_API_KEY", ""),
-			APISecret:       getEnvOrDefault("KAFKA_API_SECRET", ""),
-			Topic:           getEnvOrDefault("KAFKA_TOPIC", "shoe-events"),
-			Timeout:         getEnvDurationOrDefault("KAFKA_TIMEOUT", 30*time.Second),
-			RetryMax:        getEnvIntOrDefault("KAFKA_RETRY_MAX", 3),
-			RequiredAcks:    getEnvIntOrDefault("KAFKA_REQUIRED_ACKS", 1), // WaitForAll = -1, WaitForLocal = 1
-			Compression:     getEnvOrDefault("KAFKA_COMPRESSION", "snappy"), // snappy, gzip, lz4, zstd, none
-			BatchSize:       getEnvIntOrDefault("KAFKA_BATCH_SIZE", 100),
+			APIKey:           getEnvOrDefault("KAFKA_API_KEY", ""),
+			APISecret:        getEnvOrDefault("KAFKA_API_SECRET", ""),
+			Topic:            getEnvOrDefault("KAFKA_TOPIC", "shoe-events"),
+			Timeout:          getEnvDurationOrDefault("KAFKA_TIMEOUT", 30*time.Second),
+			RetryMax:         getEnvIntOrDefault("KAFKA_RETRY_MAX", 3),
+			RequiredAcks:     getEnvIntOrDefault("KAFKA_REQUIRED_ACKS", 1),   // WaitForAll = -1, WaitForLocal = 1
+			Compression:      getEnvOrDefault("KAFKA_COMPRESSION", "snappy"), // snappy, gzip, lz4, zstd, none
+			BatchSize:        getEnvIntOrDefault("KAFKA_BATCH_SIZE", 100),
 		},
 		SchemaRegistry: SchemaRegistryConfig{
 			URL:       getEnvOrDefault("SCHEMA_REGISTRY_URL", ""),
@@ -154,7 +154,7 @@ func joinStrings(strs []string, sep string) string {
 	if len(strs) == 1 {
 		return strs[0]
 	}
-	
+
 	result := strs[0]
 	for i := 1; i < len(strs); i++ {
 		result += sep + strs[i]

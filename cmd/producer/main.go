@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/go-sarama-sr/producer/internal/config"
 	"github.com/go-sarama-sr/producer/pkg/kafka"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 
 	// Send a test message
 	testMessage := "Hello from go-sarama-sr producer! This is a test message to validate connectivity."
-	
+
 	log.Printf("📤 Sending test message...")
 	if err := producer.SendMessage(testMessage); err != nil {
 		log.Fatalf("❌ Failed to send message: %v", err)

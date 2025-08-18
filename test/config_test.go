@@ -24,7 +24,7 @@ func TestConfigLoading(t *testing.T) {
 	os.Setenv("LOG_LEVEL", "debug")
 	os.Setenv("MESSAGE_INTERVAL", "2s")
 	os.Setenv("ENABLE_METRICS", "true")
-	
+
 	// Clean up after test
 	defer func() {
 		envVars := []string{
@@ -98,9 +98,9 @@ func TestConfigLoading(t *testing.T) {
 func TestConfigValidation(t *testing.T) {
 	// Test missing required fields and invalid values
 	testCases := []struct {
-		name        string
-		setupEnv    func()
-		expectError bool
+		name          string
+		setupEnv      func()
+		expectError   bool
 		errorContains string
 	}{
 		{
@@ -111,7 +111,7 @@ func TestConfigValidation(t *testing.T) {
 				os.Setenv("KAFKA_API_SECRET", "test-secret")
 				os.Setenv("KAFKA_TOPIC", "test-topic")
 			},
-			expectError: true,
+			expectError:   true,
 			errorContains: "KAFKA_BOOTSTRAP_SERVERS is required",
 		},
 		{
@@ -122,7 +122,7 @@ func TestConfigValidation(t *testing.T) {
 				os.Setenv("KAFKA_API_SECRET", "test-secret")
 				os.Setenv("KAFKA_TOPIC", "test-topic")
 			},
-			expectError: true,
+			expectError:   true,
 			errorContains: "KAFKA_API_KEY is required",
 		},
 		{
@@ -134,7 +134,7 @@ func TestConfigValidation(t *testing.T) {
 				os.Setenv("KAFKA_TOPIC", "test-topic")
 				os.Setenv("KAFKA_COMPRESSION", "invalid")
 			},
-			expectError: true,
+			expectError:   true,
 			errorContains: "KAFKA_COMPRESSION must be one of",
 		},
 		{
@@ -146,7 +146,7 @@ func TestConfigValidation(t *testing.T) {
 				os.Setenv("KAFKA_TOPIC", "test-topic")
 				os.Setenv("LOG_LEVEL", "invalid")
 			},
-			expectError: true,
+			expectError:   true,
 			errorContains: "LOG_LEVEL must be one of",
 		},
 		{
@@ -159,7 +159,7 @@ func TestConfigValidation(t *testing.T) {
 				os.Setenv("SCHEMA_REGISTRY_URL", "https://test-sr.confluent.cloud")
 				// Missing API key and secret
 			},
-			expectError: true,
+			expectError:   true,
 			errorContains: "SCHEMA_REGISTRY_API_KEY is required",
 		},
 		{
@@ -202,7 +202,7 @@ func TestConfigValidation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.setupEnv()
-			
+
 			_, err := config.LoadConfig()
 			if tc.expectError && err == nil {
 				t.Errorf("Expected error for test case '%s', but got none", tc.name)

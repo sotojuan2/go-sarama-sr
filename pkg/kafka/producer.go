@@ -19,24 +19,24 @@ type Producer struct {
 func NewProducer(cfg *config.Config) (*Producer, error) {
 	// Configure Sarama for Confluent Cloud with SASL_SSL
 	saramaConfig := sarama.NewConfig()
-	
+
 	// Security configuration for Confluent Cloud
 	saramaConfig.Net.SASL.Enable = true
 	saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
 	saramaConfig.Net.SASL.User = cfg.Kafka.APIKey
 	saramaConfig.Net.SASL.Password = cfg.Kafka.APISecret
-	
+
 	// TLS configuration
 	saramaConfig.Net.TLS.Enable = true
 	saramaConfig.Net.TLS.Config = &tls.Config{
 		InsecureSkipVerify: false,
 	}
-	
+
 	// Producer configuration
-	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll  // Wait for all replicas
-	saramaConfig.Producer.Retry.Max = 3                     // Retry up to 3 times
-	saramaConfig.Producer.Return.Successes = true           // Return success messages
-	
+	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll // Wait for all replicas
+	saramaConfig.Producer.Retry.Max = 3                    // Retry up to 3 times
+	saramaConfig.Producer.Return.Successes = true          // Return success messages
+
 	// Create the producer
 	producer, err := sarama.NewSyncProducer([]string{cfg.Kafka.BootstrapServers}, saramaConfig)
 	if err != nil {
@@ -44,7 +44,7 @@ func NewProducer(cfg *config.Config) (*Producer, error) {
 	}
 
 	log.Printf("✅ Successfully connected to Kafka cluster: %s", cfg.Kafka.BootstrapServers)
-	
+
 	return &Producer{
 		producer: producer,
 		config:   cfg,
@@ -65,9 +65,9 @@ func (p *Producer) SendMessage(message string) error {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
 
-	log.Printf("✅ Message sent successfully to topic '%s' [partition=%d, offset=%d]: %s", 
+	log.Printf("✅ Message sent successfully to topic '%s' [partition=%d, offset=%d]: %s",
 		p.config.Kafka.Topic, partition, offset, message)
-	
+
 	return nil
 }
 
@@ -87,19 +87,19 @@ func (p *Producer) Close() error {
 func ListTopics(cfg *config.Config) ([]string, error) {
 	// Configure Sarama for Confluent Cloud with SASL_SSL
 	saramaConfig := sarama.NewConfig()
-	
+
 	// Security configuration for Confluent Cloud
 	saramaConfig.Net.SASL.Enable = true
 	saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
 	saramaConfig.Net.SASL.User = cfg.Kafka.APIKey
 	saramaConfig.Net.SASL.Password = cfg.Kafka.APISecret
-	
+
 	// TLS configuration
 	saramaConfig.Net.TLS.Enable = true
 	saramaConfig.Net.TLS.Config = &tls.Config{
 		InsecureSkipVerify: false,
 	}
-	
+
 	// Create a client to list topics
 	client, err := sarama.NewClient([]string{cfg.Kafka.BootstrapServers}, saramaConfig)
 	if err != nil {
