@@ -22,7 +22,7 @@ import (
 
 // ProducerStats tracks production metrics
 type ProducerStats struct {
-	mu              sync.RWMutex
+	mu               sync.RWMutex
 	MessagesProduced int64
 	ErrorsCount      int64
 	StartTime        time.Time
@@ -51,15 +51,15 @@ func (ps *ProducerStats) GetStats() (int64, int64, time.Duration) {
 
 // ContinuousProducer manages the continuous production loop
 type ContinuousProducer struct {
-	cfg         *config.Config
-	srClient    *srClient.Client
-	generator   *generator.ShoeGenerator
-	serializer  *protobuf.Serializer
-	producer    sarama.AsyncProducer
-	stats       *ProducerStats
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
+	cfg        *config.Config
+	srClient   *srClient.Client
+	generator  *generator.ShoeGenerator
+	serializer *protobuf.Serializer
+	producer   sarama.AsyncProducer
+	stats      *ProducerStats
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
 }
 
 func main() {
@@ -100,7 +100,7 @@ func main() {
 	// Start the continuous production loop
 	log.Println("🔄 Starting continuous production loop...")
 	log.Println("   Press Ctrl+C to stop gracefully")
-	
+
 	go continuousProducer.StartProduction(ctx)
 
 	// Start stats reporting goroutine
@@ -109,20 +109,20 @@ func main() {
 	// Wait for shutdown signal
 	<-signalChan
 	log.Println("\n⏹️ Shutdown signal received. Stopping production...")
-	
+
 	// Cancel context to stop production
 	cancel()
-	
+
 	// Wait for graceful shutdown with timeout
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
-	
+
 	done := make(chan struct{})
 	go func() {
 		continuousProducer.WaitForShutdown()
 		close(done)
 	}()
-	
+
 	select {
 	case <-done:
 		log.Println("✅ Graceful shutdown completed")
@@ -231,7 +231,7 @@ func (cp *ContinuousProducer) StartProduction(ctx context.Context) {
 		case <-ticker.C:
 			// Generate random shoe
 			shoe := cp.generator.GenerateRandomShoe()
-			
+
 			// Serialize shoe
 			serializedData, err := cp.serializer.Serialize(cp.cfg.Kafka.Topic, shoe)
 			if err != nil {
@@ -275,14 +275,14 @@ func (cp *ContinuousProducer) StartProduction(ctx context.Context) {
 // handleSuccesses processes successful message deliveries
 func (cp *ContinuousProducer) handleSuccesses(ctx context.Context) {
 	defer cp.wg.Done()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case success := <-cp.producer.Successes():
 			cp.stats.IncrementProduced()
-			
+
 			// Extract shoe ID from headers for logging
 			shoeID := "unknown"
 			for _, header := range success.Headers {
@@ -291,9 +291,9 @@ func (cp *ContinuousProducer) handleSuccesses(ctx context.Context) {
 					break
 				}
 			}
-			
+
 			if cp.cfg.App.LogLevel == "debug" {
-				log.Printf("✅ Message produced: Shoe ID=%s, Partition=%d, Offset=%d", 
+				log.Printf("✅ Message produced: Shoe ID=%s, Partition=%d, Offset=%d",
 					shoeID, success.Partition, success.Offset)
 			}
 		}
@@ -303,7 +303,7 @@ func (cp *ContinuousProducer) handleSuccesses(ctx context.Context) {
 // handleErrors processes message delivery errors
 func (cp *ContinuousProducer) handleErrors(ctx context.Context) {
 	defer cp.wg.Done()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -328,7 +328,7 @@ func (cp *ContinuousProducer) StartStatsReporting(ctx context.Context) {
 			produced, errors, duration := cp.stats.GetStats()
 			if produced > 0 {
 				rate := float64(produced) / duration.Seconds()
-				log.Printf("📊 Stats: Produced=%d, Errors=%d, Rate=%.2f msgs/sec, Runtime=%v", 
+				log.Printf("📊 Stats: Produced=%d, Errors=%d, Rate=%.2f msgs/sec, Runtime=%v",
 					produced, errors, rate, duration.Round(time.Second))
 			}
 		}
@@ -338,11 +338,11 @@ func (cp *ContinuousProducer) StartStatsReporting(ctx context.Context) {
 // Close closes the continuous producer
 func (cp *ContinuousProducer) Close() error {
 	log.Println("🔒 Closing continuous producer...")
-	
+
 	if cp.cancel != nil {
 		cp.cancel()
 	}
-	
+
 	if cp.producer != nil {
 		err := cp.producer.Close()
 		if err != nil {
@@ -350,7 +350,7 @@ func (cp *ContinuousProducer) Close() error {
 			return err
 		}
 	}
-	
+
 	log.Println("✅ Continuous producer closed successfully")
 	return nil
 }

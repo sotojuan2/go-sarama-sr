@@ -42,7 +42,7 @@ func main() {
 	fmt.Println("\nBatch Generation (10 shoes):")
 	shoes := shoeGen.GenerateRandomShoes(10)
 	for i, shoe := range shoes {
-		fmt.Printf("%d. %s %s - $%.2f (%.1f★)\n", 
+		fmt.Printf("%d. %s %s - $%.2f (%.1f★)\n",
 			i+1, shoe.Brand, shoe.Name, shoe.SalePrice, shoe.Rating)
 	}
 

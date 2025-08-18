@@ -20,9 +20,9 @@ import (
 type productionMode string
 
 const (
-	HardcodedMode  productionMode = "hardcoded"
-	RandomMode     productionMode = "random"
-	BatchMode      productionMode = "batch"
+	HardcodedMode productionMode = "hardcoded"
+	RandomMode    productionMode = "random"
+	BatchMode     productionMode = "batch"
 )
 
 func main() {
@@ -59,10 +59,10 @@ func main() {
 
 	// Demo different production modes
 	modes := []productionMode{HardcodedMode, RandomMode, BatchMode}
-	
+
 	for _, mode := range modes {
 		log.Printf("\n🔄 Running production mode: %s", mode)
-		
+
 		switch mode {
 		case HardcodedMode:
 			err = runHardcodedMode(srClientWrapper, cfg)
@@ -71,13 +71,13 @@ func main() {
 		case BatchMode:
 			err = runBatchMode(srClientWrapper, cfg, shoeGen, 3) // Generate 3 shoes
 		}
-		
+
 		if err != nil {
 			log.Printf("❌ Error in %s mode: %v", mode, err)
 		} else {
 			log.Printf("✅ %s mode completed successfully", mode)
 		}
-		
+
 		// Small delay between modes
 		time.Sleep(2 * time.Second)
 	}
@@ -91,7 +91,7 @@ func main() {
 // runHardcodedMode produces a single hardcoded shoe (original functionality)
 func runHardcodedMode(client *srClient.Client, cfg *config.Config) error {
 	log.Println("Creating hardcoded shoe...")
-	
+
 	shoe := &pb.Shoe{
 		Id:        12345,
 		Brand:     "Nike",
@@ -109,9 +109,9 @@ func runHardcodedMode(client *srClient.Client, cfg *config.Config) error {
 // runRandomMode produces a single randomly generated shoe
 func runRandomMode(client *srClient.Client, cfg *config.Config, gen *generator.ShoeGenerator) error {
 	log.Println("Generating random shoe...")
-	
+
 	shoe := gen.GenerateRandomShoe()
-	
+
 	log.Printf("Random shoe: ID=%d, Brand=%s, Name=%s, Price=%.2f, Rating=%.1f",
 		shoe.Id, shoe.Brand, shoe.Name, shoe.SalePrice, shoe.Rating)
 
@@ -121,22 +121,22 @@ func runRandomMode(client *srClient.Client, cfg *config.Config, gen *generator.S
 // runBatchMode produces multiple randomly generated shoes
 func runBatchMode(client *srClient.Client, cfg *config.Config, gen *generator.ShoeGenerator, count int) error {
 	log.Printf("Generating batch of %d random shoes...", count)
-	
+
 	shoes := gen.GenerateRandomShoes(count)
-	
+
 	for i, shoe := range shoes {
 		log.Printf("Batch shoe %d: ID=%d, Brand=%s, Name=%s, Price=%.2f, Rating=%.1f",
 			i+1, shoe.Id, shoe.Brand, shoe.Name, shoe.SalePrice, shoe.Rating)
-		
+
 		err := produceShoeToKafka(client, cfg, shoe)
 		if err != nil {
 			return fmt.Errorf("failed to produce shoe %d: %w", i+1, err)
 		}
-		
+
 		// Small delay between messages to avoid overwhelming Kafka
 		time.Sleep(500 * time.Millisecond)
 	}
-	
+
 	return nil
 }
 
@@ -156,7 +156,7 @@ func produceShoeToKafka(client *srClient.Client, cfg *config.Config, shoe *pb.Sh
 	if err != nil {
 		return fmt.Errorf("kafka production failed: %w", err)
 	}
-	
+
 	return nil
 }
 

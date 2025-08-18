@@ -56,7 +56,7 @@ func (sg *ShoeGenerator) GenerateId() int64 {
 	// Use current timestamp (in microseconds) + random 3-digit suffix for better uniqueness
 	timestamp := time.Now().UnixMicro()
 	randomSuffix := sg.rng.Intn(1000) // 0-999
-	
+
 	// Combine timestamp with random suffix to create unique ID
 	// Using microseconds provides much better uniqueness than seconds
 	return timestamp*1000 + int64(randomSuffix)
@@ -118,7 +118,7 @@ func (sg *ShoeGenerator) GenerateSalePrice() float64 {
 
 	// Generate random price within the selected tier
 	price := minPrice + sg.rng.Float64()*(maxPrice-minPrice)
-	
+
 	// Round to 2 decimal places (cents precision)
 	return math.Round(price*100) / 100
 }
@@ -145,7 +145,7 @@ func (sg *ShoeGenerator) GenerateRating() float64 {
 
 	// Generate random rating within the selected range
 	rating := minRating + sg.rng.Float64()*(maxRating-minRating)
-	
+
 	// Round to 1 decimal place
 	return math.Round(rating*10) / 10
 }
@@ -167,7 +167,7 @@ func (sg *ShoeGenerator) GenerateRandomShoes(count int) []*pb.Shoe {
 	if count <= 0 {
 		return []*pb.Shoe{}
 	}
-	
+
 	shoes := make([]*pb.Shoe, count)
 	for i := 0; i < count; i++ {
 		shoes[i] = sg.GenerateRandomShoe()
