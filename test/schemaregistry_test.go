@@ -13,13 +13,13 @@ func TestNewClient(t *testing.T) {
 	os.Setenv("SCHEMA_REGISTRY_URL", "https://test-sr.confluent.cloud")
 	os.Setenv("SCHEMA_REGISTRY_API_KEY", "test-sr-key")
 	os.Setenv("SCHEMA_REGISTRY_API_SECRET", "test-sr-secret")
-	
+
 	// Also set required Kafka variables to satisfy config validation
 	os.Setenv("KAFKA_BOOTSTRAP_SERVERS", "test-cluster.confluent.cloud:9092")
 	os.Setenv("KAFKA_API_KEY", "test-key")
 	os.Setenv("KAFKA_API_SECRET", "test-secret")
 	os.Setenv("KAFKA_TOPIC", "test-topic")
-	
+
 	defer func() {
 		// Clean up
 		envVars := []string{
@@ -76,11 +76,11 @@ func TestNewClient(t *testing.T) {
 
 func TestNewClientValidation(t *testing.T) {
 	testCases := []struct {
-		name            string
-		url             string
-		apiKey          string
-		apiSecret       string
-		expectedError   string
+		name          string
+		url           string
+		apiKey        string
+		apiSecret     string
+		expectedError string
 	}{
 		{
 			name:          "missing URL",
@@ -181,7 +181,7 @@ func TestNewClientWithValidCredentials(t *testing.T) {
 		{
 			name:      "https URL with valid credentials",
 			url:       "https://test-sr.confluent.cloud",
-			apiKey:    "ABCD1234EFGH5678",  // Confluent Cloud format
+			apiKey:    "ABCD1234EFGH5678", // Confluent Cloud format
 			apiSecret: "abcdefghij1234567890abcdefghij1234567890abcdefghij1234567890",
 		},
 		{
@@ -205,7 +205,7 @@ func TestNewClientWithValidCredentials(t *testing.T) {
 			// This should pass validation but will fail on actual connection
 			// since we're using test credentials
 			_, err := schemaregistry.NewClient(cfg)
-			
+
 			// We expect this to fail at authentication step, not validation
 			if err != nil {
 				// Check that it's not a validation error

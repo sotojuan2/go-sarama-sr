@@ -32,7 +32,7 @@ func TestComprehensiveHealthCheck(t *testing.T) {
 
 	// Test the health check (will fail on connection but test the structure)
 	health, err := client.ComprehensiveHealthCheck()
-	
+
 	// We expect an error due to invalid credentials/network, but the structure should be valid
 	if health == nil {
 		t.Fatal("Health check should return a health status even on failure")
@@ -79,7 +79,7 @@ func TestErrorClassification(t *testing.T) {
 
 	// Test ValidateWithProtobufSchema for non-existent subject
 	err = client.ValidateWithProtobufSchema("test-shoe-subject", "test-schema-content")
-	
+
 	// Should handle non-existent subject gracefully
 	if err != nil {
 		t.Logf("Expected error for non-existent subject: %v", err)
@@ -92,7 +92,7 @@ func TestErrorClassification(t *testing.T) {
 func TestProtobufIntegrationPreparation(t *testing.T) {
 	// Test subject naming for our Shoe proto
 	expectedSubject := "shoe-value"
-	
+
 	cfg := &config.Config{
 		SchemaRegistry: config.SchemaRegistryConfig{
 			URL:       "https://test-sr.confluent.cloud",

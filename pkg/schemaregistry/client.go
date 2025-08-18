@@ -16,28 +16,28 @@ const (
 	// Timeouts for Schema Registry operations
 	DefaultConnectTimeout = 10 * time.Second
 	DefaultRequestTimeout = 5 * time.Second
-	
+
 	// Retry configuration
 	MaxRetryAttempts = 3
-	RetryDelay      = 1 * time.Second
-	
+	RetryDelay       = 1 * time.Second
+
 	// API Key validation patterns
 	APIKeyMinLength    = 10
 	APISecretMinLength = 10
-	
+
 	// Common Confluent Cloud API key pattern (starts with letters, contains alphanumeric)
 	APIKeyPattern = `^[A-Z0-9]{16}$`
 )
 
 // HealthStatus represents the health status of the Schema Registry
 type HealthStatus struct {
-	Healthy          bool          `json:"healthy"`
-	URL              string        `json:"url"`
-	ResponseTime     time.Duration `json:"response_time"`
-	SubjectCount     int           `json:"subject_count"`
-	LastError        string        `json:"last_error,omitempty"`
-	TestedEndpoints  []string      `json:"tested_endpoints"`
-	ErrorDetails     []ErrorDetail `json:"error_details,omitempty"`
+	Healthy         bool          `json:"healthy"`
+	URL             string        `json:"url"`
+	ResponseTime    time.Duration `json:"response_time"`
+	SubjectCount    int           `json:"subject_count"`
+	LastError       string        `json:"last_error,omitempty"`
+	TestedEndpoints []string      `json:"tested_endpoints"`
+	ErrorDetails    []ErrorDetail `json:"error_details,omitempty"`
 }
 
 // ErrorDetail provides detailed information about connectivity errors
@@ -103,33 +103,33 @@ func NewClient(cfg *config.Config) (*Client, error) {
 // createClientWithRetry attempts to create the client with retry logic
 func createClientWithRetry(clientConfig *sr.Config) (sr.Client, error) {
 	var lastErr error
-	
+
 	for attempt := 1; attempt <= MaxRetryAttempts; attempt++ {
 		log.Printf("🔄 Creating client (attempt %d/%d)...", attempt, MaxRetryAttempts)
-		
+
 		client, err := sr.NewClient(clientConfig)
 		if err == nil {
 			log.Printf("✅ Client created successfully on attempt %d", attempt)
 			return client, nil
 		}
-		
+
 		lastErr = err
 		log.Printf("❌ Attempt %d failed: %v", attempt, err)
-		
+
 		// Don't sleep on the last attempt
 		if attempt < MaxRetryAttempts {
 			log.Printf("⏳ Waiting %v before retry...", RetryDelay)
 			time.Sleep(RetryDelay)
 		}
 	}
-	
+
 	return nil, fmt.Errorf("all %d attempts failed, last error: %w", MaxRetryAttempts, lastErr)
 }
 
 // validateAuthentication performs an initial authentication test
 func (c *Client) validateAuthentication() error {
 	log.Printf("🔐 Validating authentication with Schema Registry...")
-	
+
 	// Try a simple operation to validate authentication
 	// This will fail if credentials are wrong
 	_, err := c.client.GetAllSubjects()
@@ -146,7 +146,7 @@ func (c *Client) validateAuthentication() error {
 		}
 		return fmt.Errorf("authentication validation failed: %w", err)
 	}
-	
+
 	log.Printf("✅ Authentication validated successfully")
 	return nil
 }
@@ -251,9 +251,9 @@ func (c *Client) Close() error {
 // TestConnection performs a comprehensive connectivity and authentication test
 func (c *Client) TestConnection() error {
 	log.Printf("🔍 Testing Schema Registry connection...")
-	
+
 	start := time.Now()
-	
+
 	// Try to get all subjects to test connectivity and authentication
 	subjects, err := c.client.GetAllSubjects()
 	if err != nil {
@@ -271,11 +271,11 @@ func (c *Client) TestConnection() error {
 	}
 
 	duration := time.Since(start)
-	
+
 	log.Printf("✅ Successfully connected to Schema Registry: %s", c.config.SchemaRegistry.URL)
 	log.Printf("⏱️  Connection test completed in %v", duration)
 	log.Printf("📋 Available subjects (%d): %v", len(subjects), subjects)
-	
+
 	// Additional validation: try to get a specific subject that may not exist
 	// This tests another API endpoint
 	_, err = c.client.GetLatestSchemaMetadata("__health_check__")
@@ -284,14 +284,14 @@ func (c *Client) TestConnection() error {
 	} else {
 		log.Printf("✅ Schema metadata API endpoint responsive")
 	}
-	
+
 	return nil
 }
 
 // ComprehensiveHealthCheck performs an exhaustive connectivity validation
 func (c *Client) ComprehensiveHealthCheck() (*HealthStatus, error) {
 	log.Printf("🔍 Starting comprehensive Schema Registry health check...")
-	
+
 	start := time.Now()
 	health := &HealthStatus{
 		URL:             c.config.SchemaRegistry.URL,
@@ -327,8 +327,8 @@ func (c *Client) ComprehensiveHealthCheck() (*HealthStatus, error) {
 	health.ResponseTime = time.Since(start)
 	health.Healthy = len(health.ErrorDetails) == 0 || c.hasOnlyRecoverableErrors(health)
 
-	log.Printf("🏥 Health check completed in %v - Status: %s", 
-		health.ResponseTime, 
+	log.Printf("🏥 Health check completed in %v - Status: %s",
+		health.ResponseTime,
 		map[bool]string{true: "HEALTHY", false: "UNHEALTHY"}[health.Healthy])
 
 	return health, nil
@@ -337,21 +337,21 @@ func (c *Client) ComprehensiveHealthCheck() (*HealthStatus, error) {
 // testSubjectsEndpoint tests the /subjects endpoint
 func (c *Client) testSubjectsEndpoint(health *HealthStatus) ([]string, error) {
 	health.TestedEndpoints = append(health.TestedEndpoints, "GET /subjects")
-	
+
 	subjects, err := c.client.GetAllSubjects()
 	if err != nil {
 		errorDetail := c.classifyError("GET /subjects", "ListSubjects", err)
 		health.ErrorDetails = append(health.ErrorDetails, errorDetail)
 		return nil, err
 	}
-	
+
 	return subjects, nil
 }
 
 // testSchemaMetadataEndpoint tests schema metadata retrieval
 func (c *Client) testSchemaMetadataEndpoint(health *HealthStatus) {
 	health.TestedEndpoints = append(health.TestedEndpoints, "GET /subjects/{subject}/versions/latest")
-	
+
 	// Test with a non-existent subject to verify error handling
 	_, err := c.client.GetLatestSchemaMetadata("__nonexistent_health_check_subject__")
 	if err != nil {
@@ -369,10 +369,10 @@ func (c *Client) testSchemaMetadataEndpoint(health *HealthStatus) {
 // testExistingSubject tests operations with an existing subject
 func (c *Client) testExistingSubject(health *HealthStatus, subject string) {
 	health.TestedEndpoints = append(health.TestedEndpoints, fmt.Sprintf("GET /subjects/%s/versions", subject))
-	
+
 	// Test getting latest schema for existing subject
 	health.TestedEndpoints = append(health.TestedEndpoints, fmt.Sprintf("GET /subjects/%s/versions/latest", subject))
-	
+
 	_, err := c.client.GetLatestSchemaMetadata(subject)
 	if err != nil {
 		errorDetail := c.classifyError(fmt.Sprintf("GET /subjects/%s/versions/latest", subject), "GetLatestSchemaMetadata", err)
@@ -387,7 +387,7 @@ func (c *Client) testErrorHandling(health *HealthStatus) {
 	// Test with extremely long subject name to trigger validation error
 	longSubjectName := strings.Repeat("x", 300)
 	health.TestedEndpoints = append(health.TestedEndpoints, "Error handling test")
-	
+
 	_, err := c.client.GetLatestSchemaMetadata(longSubjectName)
 	if err != nil {
 		// This should trigger some kind of validation or server error
@@ -411,30 +411,30 @@ func (c *Client) classifyError(endpoint, operation string, err error) ErrorDetai
 		detail.ErrorType = "authentication"
 		detail.ErrorCode = 401
 		detail.Recoverable = false
-		
+
 	case strings.Contains(errorStr, "403") || strings.Contains(errorStr, "Forbidden"):
 		detail.ErrorType = "authorization"
 		detail.ErrorCode = 403
 		detail.Recoverable = false
-		
+
 	case strings.Contains(errorStr, "404") || strings.Contains(errorStr, "not found"):
 		detail.ErrorType = "not_found"
 		detail.ErrorCode = 404
 		detail.Recoverable = true // Might be temporary
-		
+
 	case strings.Contains(errorStr, "timeout") || strings.Contains(errorStr, "deadline exceeded"):
 		detail.ErrorType = "timeout"
 		detail.Recoverable = true
-		
+
 	case strings.Contains(errorStr, "connection refused") || strings.Contains(errorStr, "no such host"):
 		detail.ErrorType = "network"
 		detail.Recoverable = true
-		
+
 	case strings.Contains(errorStr, "500") || strings.Contains(errorStr, "Internal Server Error"):
 		detail.ErrorType = "server_error"
 		detail.ErrorCode = 500
 		detail.Recoverable = true
-		
+
 	default:
 		detail.ErrorType = "unknown"
 		detail.Recoverable = false
@@ -456,10 +456,10 @@ func (c *Client) hasOnlyRecoverableErrors(health *HealthStatus) bool {
 // ValidateWithProtobufSchema tests Schema Registry with our Protobuf schema
 func (c *Client) ValidateWithProtobufSchema(subject string, schemaContent string) error {
 	log.Printf("🔍 Validating Schema Registry with Protobuf schema for subject: %s", subject)
-	
+
 	// This is a preparation for when we implement schema registration
 	// For now, we'll just validate that we can check if the subject exists
-	
+
 	metadata, err := c.client.GetLatestSchemaMetadata(subject)
 	if err != nil {
 		// Subject might not exist yet, which is fine
@@ -469,10 +469,10 @@ func (c *Client) ValidateWithProtobufSchema(subject string, schemaContent string
 		}
 		return fmt.Errorf("failed to validate subject '%s': %w", subject, err)
 	}
-	
+
 	log.Printf("✅ Subject '%s' exists", subject)
 	log.Printf("📋 Latest schema ID: %d, Version: %d", metadata.ID, metadata.Version)
 	log.Printf("📝 Schema type: %s", metadata.SchemaType)
-	
+
 	return nil
 }

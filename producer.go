@@ -8,8 +8,8 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
-	pb "github.com/go-sarama-sr/producer/pb"
 	"github.com/go-sarama-sr/producer/internal/config"
+	pb "github.com/go-sarama-sr/producer/pb"
 	srClient "github.com/go-sarama-sr/producer/pkg/schemaregistry"
 )
 
@@ -78,7 +78,7 @@ func main() {
 // serializeShoeWithSchemaRegistry serializes the Shoe object using Schema Registry
 func serializeShoeWithSchemaRegistry(client *srClient.Client, shoe *pb.Shoe) ([]byte, error) {
 	log.Println("Serializing shoe with Schema Registry...")
-	
+
 	// Create Protobuf serializer
 	serializer, err := protobuf.NewSerializer(client.GetClient(), serde.ValueSerde, protobuf.NewSerializerConfig())
 	if err != nil {
@@ -98,14 +98,14 @@ func serializeShoeWithSchemaRegistry(client *srClient.Client, shoe *pb.Shoe) ([]
 // produceMessageToKafka produces the serialized message to Kafka using Sarama
 func produceMessageToKafka(cfg *config.Config, data []byte) error {
 	log.Println("Setting up Kafka producer...")
-	
+
 	// Configure Sarama
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
 	saramaConfig.Producer.Retry.Max = 5
 	saramaConfig.Producer.Return.Successes = true
 	saramaConfig.Producer.Return.Errors = true
-	
+
 	// SASL configuration for Confluent Cloud
 	saramaConfig.Net.SASL.Enable = true
 	saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
@@ -149,7 +149,7 @@ func produceMessageToKafka(cfg *config.Config, data []byte) error {
 	// Handle response
 	select {
 	case success := <-producer.Successes():
-		log.Printf("✅ Message produced successfully to partition %d at offset %d", 
+		log.Printf("✅ Message produced successfully to partition %d at offset %d",
 			success.Partition, success.Offset)
 		return nil
 	case err := <-producer.Errors():
