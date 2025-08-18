@@ -48,8 +48,51 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Confluent Schema Registry Client Dependency",
+            "description": "Update the application's go.mod file to include the confluent-kafka-go/v2/schemaregistry package as a dependency.",
+            "dependencies": [],
+            "details": "Run 'go get github.com/confluentinc/confluent-kafka-go/v2/schemaregistry' and verify that the dependency is added to go.mod and go.sum. Ensure the correct version is used according to compatibility requirements.\n<info added on 2025-08-18T11:38:02.036Z>\nConfluent Schema Registry client dependency has been successfully added to the project using version v2.11.0. The go.mod file reflects the new dependency along with related updates and upgrades to other packages. Verification tests confirm successful compilation, correct import of the Schema Registry package, accessibility of the client type, and no conflicts with existing dependencies. The client library is now ready for initialization in the next subtask, with OAuth2 support and compatibility with Sarama and Protobuf dependencies. Proceed to initialize the Schema Registry client using environment variables in subtask 4.2.\n</info added on 2025-08-18T11:38:02.036Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Initialize Schema Registry Client Using Environment Variables",
+            "description": "Implement a wrapper or helper function to instantiate the Schema Registry client, loading configuration (URL, API key, API secret) from environment variables.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Create a Go struct or function that reads the Schema Registry URL and credentials from environment variables. Use these values to initialize the client, ensuring no sensitive data is hardcoded.\n<info added on 2025-08-18T11:45:40.626Z>\nSchema Registry client initialization is fully implemented and verified. The client wrapper loads configuration from environment variables, validates credentials, and securely establishes authenticated connectivity to Confluent Cloud. Unit and integration tests confirm successful client creation, authentication, and subject listing. Helper methods for connection testing, configuration access, and cleanup are included. No sensitive data is hardcoded; all credentials are managed via environment variables. Subtask 4.2 is complete and ready for handoff to subsequent authentication and usage logic.\n</info added on 2025-08-18T11:45:40.626Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Authentication Logic for Schema Registry Client",
+            "description": "Configure the Schema Registry client to authenticate using the provided API key and secret, ensuring secure connection to Confluent Cloud.",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "Pass the API key and secret to the client initialization logic. Validate that authentication parameters are correctly set and handle missing or invalid credentials with clear error messages.\n<info added on 2025-08-18T11:49:42.086Z>\nEnhance the authentication logic by implementing advanced credential validation (checking format, length, and allowed characters for API key and secret). Add client-side timeout configuration to prevent hangs during authentication. Integrate automatic retry logic for transient network failures during authentication attempts. Incorporate structured logging to improve traceability and debugging of authentication events. Perform proactive credential validation during client initialization to catch issues early. Distinguish and handle specific error types, clearly separating authentication errors from connectivity errors. Update validateSchemaRegistryConfig() to include these new validation checks and error handling. Develop targeted tests to cover various authentication failure scenarios.\n</info added on 2025-08-18T11:49:42.086Z>\n<info added on 2025-08-18T11:56:11.600Z>\nEnhanced authentication logic is now fully implemented and verified. Advanced validation features include URL format checks, credential length enforcement (minimum 10 characters), whitespace detection, and Confluent Cloud API key pattern matching, all with comprehensive error messages. Connection handling is robust, featuring configurable timeouts (5s request, 10s connect), automatic retry logic (up to 3 attempts with 1s delay), and graceful error handling for each retry. Structured logging tracks authentication progress and events.\n\nThe authentication validation process proactively tests credentials during client initialization, classifies errors (401 for authentication, 403 for permissions, timeouts, network issues), and provides specific feedback such as \"authentication failed - check your API key and secret.\" Connection health checks are performed via additional API endpoint testing for reliability.\n\nTesting verification includes nine validation test cases (covering missing fields, format errors, whitespace), valid credential tests without network dependency, live authentication tests detecting 401 Unauthorized, and clear error categorization between authentication and network failures.\n\nEnhanced validation functions are provided: validateURL(), validateAPIKey(), validateAPISecret(), createClientWithRetry(), and validateAuthentication(), each supporting robust and secure credential handling. Configuration improvements include enhanced constants for timeouts, retry limits, validation patterns, structured logging, secure credential management (no secret logging), and full backwards compatibility with the existing client interface.\n\nAuthentication logic is ready for the next phase: validating Schema Registry connectivity and error handling.\n</info added on 2025-08-18T11:56:11.600Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Validate Schema Registry Connectivity and Error Handling",
+            "description": "Test the Schema Registry client connection and implement error handling for failed authentication or unreachable endpoints.",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "Attempt to connect to the Schema Registry using the initialized client. Log success or failure, and ensure errors (e.g., invalid credentials, network issues) are caught and reported with actionable messages.\n<info added on 2025-08-18T12:00:10.130Z>\nExpand connectivity validation to include multiple Schema Registry endpoints and operations, ensuring exhaustive coverage. Implement granular error handling for network failures, authentication issues, permission denials, and timeouts, with actionable log messages for each scenario. Add periodic health checks to automatically verify Schema Registry status and expose a dedicated health check endpoint. Integrate a metrics and logging system to provide complete traceability of all connectivity attempts and errors. Develop recovery and fallback strategies to handle transient failures and enable automatic retries where appropriate. Test connectivity and error handling using the Shoe.proto Protobuf model to validate schema registration readiness. Document all identified error scenarios and corresponding handling strategies for future reference.\n</info added on 2025-08-18T12:00:10.130Z>\n<info added on 2025-08-18T12:33:18.662Z>\nAll connectivity validation, error handling, and health check features have been fully implemented and tested. The Schema Registry client now includes a comprehensive health check system with exhaustive endpoint testing, detailed metrics, and real-time status tracking. Advanced error classification covers authentication, authorization, not found, timeout, network, and server errors, with actionable guidance and HTTP status code mapping. Multi-endpoint validation ensures robust connectivity and schema operations, including Protobuf schema readiness for \"shoe-value.\" Enhanced authentication and network handling provide granular timeout, retry, and failure detection. A complete test suite validates all functionality, and metrics are exposed in JSON format for monitoring. The client is production-ready and prepared for schema registration in the next phase.\n</info added on 2025-08-18T12:33:18.662Z>",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 5,
@@ -242,7 +285,7 @@
     ],
     "metadata": {
       "created": "2025-08-18T10:02:49.096Z",
-      "updated": "2025-08-18T11:11:00.161Z",
+      "updated": "2025-08-18T12:33:34.045Z",
       "description": "Tasks for master context"
     }
   }
