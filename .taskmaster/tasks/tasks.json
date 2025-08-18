@@ -105,7 +105,7 @@
           2,
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -113,7 +113,7 @@
             "description": "Instantiate a hardcoded Shoe object in Go using the generated Protobuf struct.",
             "dependencies": [],
             "details": "Use the Shoe struct generated from the Protobuf schema. Populate all required fields with sample values.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -124,7 +124,7 @@
               "5.1"
             ],
             "details": "Utilize the confluent-kafka-go/v2/schemaregistry client to serialize the Shoe object according to the registered schema.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -135,7 +135,7 @@
               "5.2"
             ],
             "details": "Query the Schema Registry for the Shoe schema. If not found, register the schema before serialization.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -146,7 +146,7 @@
               "5.3"
             ],
             "details": "Configure Sarama producer and send the serialized message to the designated Kafka topic.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -157,7 +157,7 @@
               "5.4"
             ],
             "details": "Use a Kafka consumer or Confluent Cloud UI to verify the message payload matches the expected Protobuf format.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -285,7 +285,7 @@
     ],
     "metadata": {
       "created": "2025-08-18T10:02:49.096Z",
-      "updated": "2025-08-18T12:33:34.045Z",
+      "updated": "2025-08-18T13:15:53.978Z",
       "description": "Tasks for master context"
     }
   }
