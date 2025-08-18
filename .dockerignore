@@ -1,0 +1,67 @@
+# .dockerignore
+# Ignore unnecessary files during Docker build
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Compiled binaries (will be built inside container)
+bin/
+build/
+
+# Test files
+*_test.go
+testdata/
+
+# Environment files (should be passed at runtime)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Temporary files
+tmp/
+temp/
+
+# Dependencies (will be downloaded inside container)
+vendor/
+
+# Coverage reports
+coverage.out
+coverage.html
+
+# Protobuf generated files (will be generated if needed)
+# pb/
+
+# TaskMaster files
+.taskmaster/
+
+# Docker files
+docker-compose.yml
+docker-compose.yaml

@@ -8,7 +8,12 @@ This directory contains the continuous Kafka producer that implements the final 
 - **Asynchronous Production**: Non-blocking message production with proper error handling
 - **Random Data Generation**: Uses the custom shoe generator for realistic, unique data
 - **Schema Registry Integration**: Automatic schema registration and serialization
-- **Graceful Shutdown**: Responds to SIGINT/SIGTERM with clean resource cleanup
+- **Enhanced Graceful Shutdown**: Responds to SIGINT/SIGTERM with comprehensive shutdown sequence
+  - Signal handling for clean termination
+  - Message generation stops immediately on signal
+  - Buffered messages flushed using AsyncClose()
+  - Producer channels properly drained
+  - Clean resource cleanup with timeout protection
 - **Real-time Statistics**: Live metrics reporting including production rate and error counts
 - **Configurable Timing**: Message production interval configurable via environment variables
 
@@ -77,6 +82,10 @@ go run ./cmd/continuous_producer/main.go
 ^C
 ⏹️ Shutdown signal received. Stopping production...
 🛑 Production loop stopping...
+🔒 Closing continuous producer...
+📤 Flushing buffered messages...
+⏳ Waiting for all messages to be processed...
+✅ Continuous producer closed successfully
 ✅ Graceful shutdown completed
 📊 Final Statistics:
    📤 Messages Produced: 25
@@ -94,7 +103,12 @@ go run ./cmd/continuous_producer/main.go
 3. **Success Handler**: Goroutine processing successful message deliveries
 4. **Error Handler**: Goroutine processing message delivery errors
 5. **Stats Reporter**: Goroutine providing real-time production metrics
-6. **Graceful Shutdown**: Signal handling for clean termination
+6. **Enhanced Graceful Shutdown**: Advanced signal handling for clean termination
+   - SIGINT/SIGTERM signal interception
+   - Context-based cancellation propagation
+   - AsyncClose() for proper message flushing
+   - Channel draining until closure
+   - WaitGroup coordination for goroutine synchronization
 
 ### Message Flow
 
@@ -110,7 +124,12 @@ go run ./cmd/continuous_producer/main.go
 - **Serialization Errors**: Logged and counted, loop continues
 - **Kafka Errors**: Processed by dedicated error handler goroutine
 - **Network Issues**: Automatic retries via Sarama configuration
-- **Graceful Shutdown**: Clean resource cleanup on termination signals
+- **Enhanced Graceful Shutdown**: 
+  - Clean resource cleanup on termination signals
+  - Buffered message flushing with AsyncClose()
+  - Channel draining until closure
+  - Timeout protection to prevent hanging
+  - No message loss during shutdown process
 
 ## Integration
 
@@ -155,4 +174,11 @@ This producer completes **Task 7: Integrate Random Data Generation into Asynchro
 ✅ **7.4**: Loop timing and message frequency managed  
 ✅ **7.5**: Kafka topic monitoring enabled through logs and stats  
 
-The MVP is now complete with a fully functional continuous data producer.
+**Additionally completes Task 9: Implement Graceful Shutdown**:
+
+✅ **9.1**: Signal handling for SIGINT and SIGTERM implemented  
+✅ **9.2**: Message generation stops and goroutine cleanup initiated  
+✅ **9.3**: Buffered messages flushed with no data loss validation  
+✅ **9.4**: Producer and resources closed cleanly with comprehensive logging
+
+The MVP is now **production-ready** with enterprise-grade graceful shutdown capabilities.

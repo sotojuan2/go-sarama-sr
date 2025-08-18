@@ -1,0 +1,85 @@
+# Docker Compose for Go Sarama Schema Registry Producer
+# This file provides easy development and testing setup
+# 
+# Architecture Notes:
+# - Uses Sarama for Kafka operations (pure Go)
+# - Uses Confluent Schema Registry client (requires librdkafka/CGO)
+# - Docker images use Debian (glibc) for librdkafka compatibility
+# - Currently only continuous_producer and basic producer available in containers
+
+version: '3.8'
+
+services:
+  # Continuous Producer (Primary/Production-ready)
+  continuous-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: go-sarama-producer:latest
+    container_name: continuous-producer
+    command: ["./bin/continuous_producer"]
+    env_file:
+      - .env
+    environment:
+      - LOG_LEVEL=info
+      - MESSAGE_INTERVAL=2s
+    restart: unless-stopped
+    profiles:
+      - continuous
+      - all
+
+  # Basic Producer (Simple implementation)
+  basic-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: go-sarama-producer:latest
+    container_name: basic-producer
+    command: ["./bin/producer"]
+    env_file:
+      - .env
+    environment:
+      - LOG_LEVEL=info
+      - MESSAGE_INTERVAL=3s
+    restart: unless-stopped
+    profiles:
+      - basic
+      - development
+
+  # Note: robust-producer and enhanced-producer are temporarily disabled
+  # due to missing errorhandling, logging, and metrics package dependencies
+  # They can be run directly outside of Docker until dependencies are completed
+
+# Usage Examples:
+# 
+# 1. Build the image:
+#    docker-compose build
+#
+# 2. Run continuous producer (recommended for production):
+#    docker-compose --profile continuous up
+#
+# 3. Run basic producer (simple implementation):
+#    docker-compose --profile basic up
+#
+# 4. Run all available producers:
+#    docker-compose --profile all up
+#
+# 5. Run in detached mode:
+#    docker-compose --profile continuous up -d
+#
+# 6. View logs:
+#    docker-compose logs -f continuous-producer
+#
+# 7. Stop and remove containers:
+#    docker-compose down
+#
+# 8. Clean up images:
+#    docker-compose down --rmi all
+
+# Notes:
+# - Make sure to create a .env file with your Confluent Cloud credentials
+# - Currently only continuous and basic producers are available in containers
+# - For robust and enhanced producers, run them directly outside Docker until
+#   errorhandling, logging, and metrics packages are completed
+# - Adjust MESSAGE_INTERVAL and LOG_LEVEL as needed
+# - For production use, consider using external secret management
