@@ -1,0 +1,53 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+	"name": "Go-sarama-sr",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/go:1-1.24-bookworm",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "lts"
+		}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "sudo apt update && sudo apt install -y protobuf-compiler && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"mcp": {
+				"servers": {
+					"task-master-ai": {
+						"command": "npx",
+						"args": [
+							"-y",
+							"--package=task-master-ai",
+							"task-master-ai"
+						],
+						"env": {
+							"ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
+							"PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
+							"OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
+							"GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
+							"XAI_API_KEY": "YOUR_XAI_KEY_HERE",
+							"OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
+							"MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
+							"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
+							"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
+						},
+						"type": "stdio"
+					}
+				}
+			}
+		}
+	},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

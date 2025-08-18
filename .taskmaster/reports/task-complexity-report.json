@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-08-18T10:05:42.857Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Define Protobuf Schema and Generate Go Code",
+			"complexityScore": 3,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the task into: (1) Drafting the shoe.proto schema based on PRD, (2) Running protoc to generate Go code, (3) Validating generated code and updating documentation.",
+			"reasoning": "Defining a Protobuf schema and generating Go code is straightforward with established tooling and clear requirements. However, attention to detail is needed to match the PRD and ensure code generation works as expected."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Implement Basic Sarama Producer Connectivity",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand into: (1) Setting up Sarama configuration for SASL_SSL, (2) Implementing connection logic, (3) Sending a test message, (4) Verifying message delivery in Kafka.",
+			"reasoning": "Establishing secure Kafka connectivity with Sarama involves configuration, authentication, and basic message production. Each step is well-documented but requires careful setup and validation."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Configure Application via Environment Variables",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divide into: (1) Identifying required environment variables, (2) Refactoring config loading logic, (3) Implementing error handling for missing variables, (4) Testing with various environment setups.",
+			"reasoning": "Loading configuration from environment variables is standard practice, but robust error handling and validation are necessary for security and portability."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Integrate Confluent Schema Registry Client",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: (1) Adding Schema Registry client dependency, (2) Implementing client initialization with env vars, (3) Handling authentication, (4) Validating connection and error handling.",
+			"reasoning": "Integrating the Schema Registry client requires dependency management, secure configuration, and connection validation, with some complexity in authentication and error handling."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Serialize and Produce a Single Protobuf Message",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Creating a hardcoded Shoe object, (2) Serializing with Schema Registry client, (3) Registering schema if needed, (4) Producing message with Sarama, (5) Verifying message in Kafka.",
+			"reasoning": "This task combines multiple components—data modeling, serialization, schema registration, and message production—requiring integration and end-to-end validation."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Implement Random Data Generation Logic",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand into: (1) Designing data generation logic, (2) Implementing random value assignment for each field, (3) Integrating faker or custom logic, (4) Writing unit tests for validation.",
+			"reasoning": "Random data generation is conceptually simple but requires careful implementation to ensure realism and schema compliance, plus thorough testing."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Integrate Random Data Generation into Asynchronous Producer Loop",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: (1) Implementing producer loop, (2) Integrating random Shoe generation, (3) Serializing and producing messages asynchronously, (4) Managing loop timing, (5) Monitoring Kafka topic for output.",
+			"reasoning": "Combining asynchronous production with random data generation and serialization introduces concurrency and integration challenges, requiring careful orchestration and monitoring."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Implement Robust Asynchronous Event Handling",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Setting up goroutines for Successes and Errors channels, (2) Implementing structured logging, (3) Handling and reporting failures, (4) Testing with simulated errors.",
+			"reasoning": "Proper event handling and logging in asynchronous systems is critical for reliability and observability, requiring concurrency management and robust error reporting."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Implement Graceful Shutdown",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand into: (1) Adding signal handling for SIGINT/SIGTERM, (2) Stopping message generation, (3) Flushing buffered messages, (4) Closing producer and resources cleanly.",
+			"reasoning": "Graceful shutdown involves signal handling, resource management, and ensuring no data loss, which are essential for production readiness and reliability."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Containerize the Application with a Dockerfile",
+			"complexityScore": 3,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Divide into: (1) Writing Dockerfile for build and run, (2) Managing dependencies and environment variables, (3) Testing container build and execution.",
+			"reasoning": "Containerizing a Go application is straightforward with modern tooling, but attention is needed for dependency management and environment configuration."
+		}
+	]
+}

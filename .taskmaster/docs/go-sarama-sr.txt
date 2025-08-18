@@ -1,0 +1,134 @@
+# **Product Requirements Document: Golang Kafka Producer for Confluent Cloud**
+
+## **Overview**
+
+[cite\_start]This document outlines the requirements for a high-performance, asynchronous Kafka producer built in Golang. [cite: 1] The producer is designed to integrate seamlessly with **Confluent Cloud**, leveraging its **Schema Registry** to ensure data quality and schema enforcement.
+
+The primary problem this producer solves is the need for a reliable and efficient way to ingest randomly generated, structured event data into a Kafka topic. It is intended for backend developers who need a robust, event-driven data pipeline for testing, simulation, or seeding applications. The value lies in its high throughput (due to its asynchronous nature), data integrity (guaranteed by Protobuf and Schema Registry), and its focus on the modern Confluent Cloud ecosystem. [cite\_start]🚀 [cite: 2]
+
+-----
+
+## **Core Features**
+
+### **1. Asynchronous Kafka Production**
+
+  * **What it does:** The producer will send messages to a Kafka topic without blocking the main application thread. It will use a buffered approach to send messages in batches for maximum efficiency.
+  * **Why it's important:** Asynchronous production is critical for high-throughput applications, preventing the data source from becoming a bottleneck and ensuring smooth performance.
+  * **How it works:** This will be implemented using the `sarama` library's `AsyncProducer`. The producer will be configured to handle success and error messages from separate channels, ensuring no data loss.
+
+### **2. Confluent Cloud & Schema Registry Integration**
+
+  * **What it does:** The producer will securely connect to a Confluent Cloud Kafka cluster and its associated Schema Registry. It will automatically register the Protobuf schema for the `shoe` event type if it doesn't already exist and will use the registry to serialize outgoing messages.
+  * **Why it's important:** Using Schema Registry enforces a data contract, prevents schema drift, and ensures that all consumers can reliably deserialize the data. This is a cornerstone of good data governance.
+  * **How it works:** The application will use the `github.com/confluentinc/confluent-kafka-go/v2/schemaregistry` client. It will be configured with the Schema Registry URL and API credentials. Before producing, it will serialize the Protobuf message payload using the registry client.
+
+### **3. Protobuf-based Random Data Generation**
+
+  * **What it does:** The producer will generate random data that conforms to a predefined `shoe` event schema, originally inspired by an Avro schema but translated to Protobuf.
+  * **Why it's important:** This allows for realistic load testing and provides a continuous stream of valid data for developing and testing downstream consumer applications.
+  * **How it works:** A `shoe.proto` file will define the message structure. Golang code will be generated from this `.proto` file. [cite\_start]The application will then use a data generation utility (like `faker` or custom logic) to create random instances of the generated `Shoe` struct. [cite: 3]
+
+-----
+
+## **User Experience**
+
+As a backend component, the "user" is a developer integrating or running this producer. The focus is on a smooth **Developer Experience (DX)**.
+
+  * **User Personas:**
+      * **Backend Developer:** Needs to run the producer to generate test data for their streaming applications or microservices.
+  * **Key User Flows:**
+    1.  **Configuration:** The developer configures the producer by providing Confluent Cloud bootstrap server details, API keys, and the target Kafka topic name via environment variables.
+    2.  **Execution:** The developer runs the compiled Go application from the command line.
+    3.  **Monitoring:** The producer outputs logs indicating successful message production, connection status, and any errors encountered, allowing the developer to monitor its health.
+  * **UI/UX Considerations:**
+      * **Clear & Actionable Logging:** Logs should be structured and provide context (e.g., "Successfully produced message with key X to topic Y") and clear error messages.
+      * **Configuration over Code:** All environment-specific variables (credentials, server names) must be configurable via environment variables, not hardcoded.
+      * [cite\_start]**Simple Interface:** The core logic should be encapsulated, providing a clean `main` function to start and stop the producer. [cite: 4]
+
+-----
+
+## **Technical Architecture**
+
+  * **System Components:**
+      * **Golang Application:** The executable producer.
+      * **Sarama Library:** Used for core Kafka producer logic (asynchronous).
+      * **Confluent Schema Registry Client:** Used for serializing Protobuf messages.
+      * **Confluent Cloud:** The managed Kafka cluster and Schema Registry service.
+  * **Data Models:** The data will be structured using the following Protobuf schema (`shoe.proto`):
+    ```proto
+    syntax = "proto3";
+    package main;
+    option go_package = "./pb";
+
+    message Shoe {
+      int64 id = 1;
+      string brand = 2;
+      string name = 3;
+      double sale_price = 4;
+      double rating = 5;
+    }
+    ```
+  * **APIs and Integrations:**
+      * **Internal API:** A simple producer interface within the Go application (e.g., `func startProducer(config Config)`).
+      * **External Integrations:**
+          * Confluent Cloud Kafka: via SASL\_SSL authentication.
+          * Confluent Schema Registry: via HTTPS with Basic Auth (API Key & Secret).
+  * **Infrastructure Requirements:**
+      * A Go development environment (version 1.18+).
+      * Access to a Confluent Cloud cluster with a topic created.
+      * API credentials for both the Kafka cluster and the Schema Registry.
+
+-----
+
+## **Development Roadmap**
+
+The development process is broken down by scope, not timelines.
+
+  * **MVP Requirements:** The minimum viable product is a command-line application that can successfully produce a single, randomly generated, schema-compliant message to Confluent Cloud.
+    1.  **Schema Definition:** Create the `shoe.proto` file and generate the corresponding Go code.
+    2.  **Basic Connectivity:** Implement a `sarama` producer that connects to Confluent Cloud and sends a simple string message (ignoring schema for now). This validates the connection and authentication logic.
+    3.  **Schema Serialization:** Integrate the `schemaregistry` client. Create a hardcoded `Shoe` object, serialize it using the registry, and produce it.
+    4.  **Random Data Logic:** Implement the function to generate a random `Shoe` object.
+    5.  **Full Integration:** Combine all pieces: generate a random `Shoe` object, serialize it, and produce it asynchronously.
+  * **Future Enhancements:**
+      * **Graceful Shutdown:** Implement signal handling to ensure the producer flushes its buffer and shuts down cleanly on interruption.
+      * **Configuration Management:** Load all configuration from a file (e.g., `config.yaml`) or environment variables instead of command-line flags.
+      * **Metrics and Observability:** Add Prometheus metrics for production rate, success count, and error count.
+      * **Containerization:** Provide a `Dockerfile` for easy deployment.
+
+-----
+
+## **Logical Dependency Chain**
+
+Development must follow this logical order to ensure a stable foundation.
+
+1.  **Schema First:** The absolute first step is to finalize the `shoe.proto` schema and generate the Go structs. Nothing else can be built without the data model.
+2.  **Establish Connection:** The next priority is proving a working connection to Confluent Cloud. This unblocks all further development.
+3.  **Achieve Serialization:** Immediately after connecting, the focus must be on integrating with the Schema Registry to serialize and send one valid message. This is the core technical challenge.
+4.  **Automate Data Generation:** Once a message can be sent, the process can be automated with the random data generation logic. [cite\_start]This moves from a "hello world" test to a usable tool. [cite: 5]
+
+-----
+
+## **Risks and Mitigations**
+
+  * **Technical Challenges:**
+      * **Risk:** Incorrectly handling `sarama`'s asynchronous error and success channels could lead to silent data loss.
+      * **Mitigation:** Implement dedicated goroutines from the start to consume from the `Errors()` and `Successes()` channels, with robust logging for every event.
+      * **Risk:** Authentication complexities with Confluent Cloud's SASL/SCRAM and Schema Registry API keys.
+      * **Mitigation:** Heavily rely on the official Confluent and `sarama` documentation and examples. Document the exact environment variables and configuration settings required.
+  * **Figuring out the MVP:**
+      * **Risk:** The scope could expand to include a complex CLI or configuration system too early.
+      * **Mitigation:** The MVP is strictly defined as an application that can be run with hardcoded or basic flag-based settings and successfully produces messages. Enhancements will only be considered post-MVP.
+  * **Resource Constraints:**
+      * **Risk:** Lack of a stable Confluent Cloud environment for development and testing.
+      * **Mitigation:** Before any code is written, confirm that a development environment in Confluent Cloud is available and credentials have been provided. For initial local development, a Docker-based Kafka and Schema Registry setup can be used as a fallback.
+
+-----
+
+## **Appendix**
+
+  * **Key Libraries:**
+      * Sarama: [https://github.com/IBM/sarama](https://github.com/IBM/sarama)
+      * Confluent Schema Registry Client for Go: [https://github.com/confluentinc/confluent-kafka-go/v2/schemaregistry](https://www.google.com/search?q=https://github.com/confluentinc/confluent-kafka-go/v2/schemaregistry)
+  * **Reference Example:**
+      * Protobuf Producer Example: [https://github.com/confluentinc/confluent-kafka-go/tree/master/examples/protobuf\_producer\_example](https://github.com/confluentinc/confluent-kafka-go/tree/master/examples/protobuf_producer_example)

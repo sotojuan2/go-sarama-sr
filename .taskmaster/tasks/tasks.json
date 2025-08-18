@@ -1,0 +1,249 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Define Protobuf Schema and Generate Go Code",
+        "description": "Create the `shoe.proto` file defining the `Shoe` message structure. Use the protoc compiler to generate the corresponding Go data structures in the `./pb` package.",
+        "details": "The schema must match the one specified in the PRD's 'Data Models' section, including fields for id, brand, name, sale_price, and rating. This is the foundational step for all data-related logic.\n<info added on 2025-08-18T10:11:09.780Z>\nFollow current best practices for Protocol Buffers with Go by using the official google.golang.org/protobuf library and setting the go_package option in shoe.proto to \"github.com/yourorg/yourrepo/pb;pb\" to ensure correct package placement and import paths. Use protoc version 3.24.x or newer and install the protoc-gen-go plugin for code generation. Generate Go code with protoc --go_out=./pb --go_opt=paths=source_relative shoe.proto. For Confluent Schema Registry compatibility, register the shoe.proto schema before producing messages, and use the confluent-kafka-go/v2/schemaregistry client for serialization and schema management. When updating the schema, only add new fields with new numbers and never reuse or change existing field numbers to maintain compatibility. Add comments to each field in the proto file for maintainability and use optional fields where appropriate.\n</info added on 2025-08-18T10:11:09.780Z>\n<info added on 2025-08-18T10:18:37.329Z>\nProtobuf schema creation and Go code generation for the Shoe message are complete. The shoe.proto file defines all required fields (id, brand, name, sale_price, rating) with proto3 syntax, proper package and go_package declarations, and comprehensive field documentation. Go code was generated using protoc v3.21.12 and protoc-gen-go v1.36.7, resulting in pb/shoe.pb.go with all necessary structures. devcontainer.json now includes automatic protoc installation for future rebuilds. Functionality was verified by instantiating the Shoe struct in test_shoe.go, confirming getter methods and protobuf serialization, and updating go.mod with the google.golang.org/protobuf dependency. The schema and generated code follow best practices, maintain correct package structure, and are fully compatible with Confluent Schema Registry. The Shoe struct is now ready for use throughout the application for message creation, serialization, and Kafka production.\n</info added on 2025-08-18T10:18:37.329Z>",
+        "testStrategy": "Verify that the `shoe.pb.go` file is generated successfully and that the `Shoe` struct can be instantiated in a Go program without compilation errors.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Basic Sarama Producer Connectivity",
+        "description": "Create a basic Golang application that uses the `sarama` library to establish a secure connection to the Confluent Cloud Kafka cluster using SASL_SSL authentication.",
+        "details": "This task focuses solely on validating the connection and authentication logic. The producer should be able to send a simple, hardcoded string message to the target topic, ignoring schema serialization for now.\n<info added on 2025-08-18T10:21:55.384Z>\nFollow current best practices for Sarama producer integration with Confluent Cloud using SASL_SSL authentication:\n\n- Load all sensitive configuration (bootstrap servers, SASL username/API key, and password/API secret) from environment variables, never hardcoded.\n- Set up Sarama config with `config.Net.SASL.Enable = true`, `config.Net.SASL.Mechanism = sarama.SASLTypePlaintext`, and `config.Net.TLS.Enable = true`. Use the latest supported Kafka version (e.g., `config.Version = sarama.V3_5_0_0`).\n- Use `sarama.NewAsyncProducer` for non-blocking message production. Implement dedicated goroutines to consume both `Successes()` and `Errors()` channels to prevent deadlocks and ensure all outcomes are logged.\n- On startup, validate connection by sending a test message and confirming delivery via the `Successes()` channel.\n- Implement structured logging for all producer events, including topic, partition, offset, and error details.\n- Tune retry settings (`config.Producer.Retry.Max`) for reliability, and consider enabling idempotence (`config.Producer.Idempotent = true`) and compression (`config.Producer.Compression = sarama.CompressionSnappy`) for production scenarios.\n- Prepare for future enhancements such as graceful shutdown and metrics integration for monitoring producer health.\n</info added on 2025-08-18T10:21:55.384Z>\n<info added on 2025-08-18T10:56:27.917Z>\nConfluent Cloud connectivity has been successfully established using SASL_SSL authentication. Initial authorization errors were encountered due to the 'shoe-events' topic not existing or lacking write permissions; this was resolved by updating the configuration to use the existing 'js_shoe' topic with proper access rights (KAFKA_TOPIC=js_shoe). The technical implementation now includes validated SASL_SSL configuration, successful Kafka producer instantiation, a ready Protobuf serialization pipeline, working configuration management, and implemented connection pooling and timeout handling. Next steps are to test message production to the 'js_shoe' topic, verify end-to-end message delivery, and complete Task 2 implementation.\n</info added on 2025-08-18T10:56:27.917Z>",
+        "testStrategy": "Run the application and confirm that it connects to Confluent Cloud without authentication errors and that the string message appears in the target Kafka topic.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Configure Application via Environment Variables",
+        "description": "Refactor the application to load all environment-specific configurations, such as Confluent Cloud bootstrap servers, API keys/secrets, and topic names, from environment variables.",
+        "details": "As per the 'UI/UX Considerations', no credentials or server names should be hardcoded. This ensures the application is portable and secure.\n<info added on 2025-08-18T11:10:49.259Z>\nEnhanced configuration system implemented with expanded KafkaConfig (producer tuning options), added SchemaRegistryConfig (URL and credentials), and improved AppConfig (message interval, metrics). Comprehensive validation ensures informative error messages for missing or invalid environment variables. New configuration parameters include KAFKA_TIMEOUT, KAFKA_RETRY_MAX, KAFKA_REQUIRED_ACKS, KAFKA_COMPRESSION, KAFKA_BATCH_SIZE, SCHEMA_REGISTRY_URL, SCHEMA_REGISTRY_API_KEY, SCHEMA_REGISTRY_API_SECRET, MESSAGE_INTERVAL, and ENABLE_METRICS. Helper functions added for parsing int, bool, and duration types. Documentation updated with a complete .env.example and detailed comments for each parameter, including examples and default values. Test suite expanded to cover all new configuration options, validation for invalid values, and Schema Registry requirements. Real configuration applied and verified for both Kafka and Schema Registry endpoints. System is now fully prepared for Schema Registry integration and protobuf serialization in subsequent tasks.\n</info added on 2025-08-18T11:10:49.259Z>",
+        "testStrategy": "Set the required environment variables and run the application. Verify it connects successfully using the provided variables. Test that it fails gracefully with clear error messages if variables are missing.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Integrate Confluent Schema Registry Client",
+        "description": "Integrate the `confluent-kafka-go/v2/schemaregistry` client into the application. Configure it to connect to the Confluent Cloud Schema Registry using its URL and API credentials.",
+        "details": "This task involves setting up the client and ensuring it can authenticate. The goal is to prepare for message serialization, but not yet perform it.",
+        "testStrategy": "Instantiate the Schema Registry client with credentials from environment variables. A successful test is one where the client object is created without connection errors.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Serialize and Produce a Single Protobuf Message",
+        "description": "Combine the Kafka producer and Schema Registry client to produce a single, schema-compliant message. This involves creating a hardcoded `Shoe` object, serializing it using the registry client, and sending it with the `sarama` async producer.",
+        "details": "This is a key MVP milestone that validates the entire production pipeline, from data structure to serialization to Kafka ingestion. The schema should be automatically registered if it doesn't exist.",
+        "testStrategy": "Run the application and verify that a message is produced to the Kafka topic. Use a consumer or the Confluent Cloud UI to confirm the message payload is correctly serialized according to the Protobuf schema.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Hardcoded Shoe Object",
+            "description": "Instantiate a hardcoded Shoe object in Go using the generated Protobuf struct.",
+            "dependencies": [],
+            "details": "Use the Shoe struct generated from the Protobuf schema. Populate all required fields with sample values.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Serialize Shoe Object with Schema Registry Client",
+            "description": "Serialize the Shoe object using the Schema Registry client to ensure schema compliance.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Utilize the confluent-kafka-go/v2/schemaregistry client to serialize the Shoe object according to the registered schema.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Register Protobuf Schema if Not Exists",
+            "description": "Check if the Shoe Protobuf schema is registered in the Schema Registry and register it if missing.",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Query the Schema Registry for the Shoe schema. If not found, register the schema before serialization.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Produce Serialized Message with Sarama Async Producer",
+            "description": "Send the serialized Shoe message to the Kafka topic using the Sarama async producer.",
+            "dependencies": [
+              "5.3"
+            ],
+            "details": "Configure Sarama producer and send the serialized message to the designated Kafka topic.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Verify Message in Kafka Topic",
+            "description": "Confirm that the produced message appears in the Kafka topic and is correctly serialized.",
+            "dependencies": [
+              "5.4"
+            ],
+            "details": "Use a Kafka consumer or Confluent Cloud UI to verify the message payload matches the expected Protobuf format.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Random Data Generation Logic",
+        "description": "Create a utility function that generates random instances of the `Shoe` struct. The generated data should be realistic and conform to the Protobuf schema's data types.",
+        "details": "Use a library like `faker` or custom logic to populate the fields of the `Shoe` struct with random but plausible data (e.g., positive prices, ratings between 1 and 5).",
+        "testStrategy": "Write a unit test for the generation function that creates multiple `Shoe` objects and asserts that all fields are populated with values of the correct type and within expected ranges.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Integrate Random Data Generation into Asynchronous Producer Loop",
+        "description": "Combine all components into a continuous loop. The application will now generate a random `Shoe` object, serialize it, and produce it asynchronously to Kafka on a repeating basis (e.g., once per second).",
+        "details": "This task completes the core functionality of the MVP, turning the producer from a single-shot test into a usable data generation tool.",
+        "testStrategy": "Run the application and monitor the target Kafka topic to ensure a continuous stream of unique, valid messages is being produced.",
+        "priority": "high",
+        "dependencies": [
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Asynchronous Producer Loop",
+            "description": "Create a continuous loop that repeatedly triggers the data generation and production process, ensuring asynchronous operation.",
+            "dependencies": [],
+            "details": "Set up the main loop structure using Go routines or async constructs. The loop should be able to run indefinitely until externally stopped.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Integrate Random Shoe Data Generation",
+            "description": "Incorporate the random Shoe object generation logic into the producer loop.",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Call the utility function for random Shoe creation within each iteration of the loop, ensuring each message is unique and schema-compliant.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Serialize and Produce Messages Asynchronously",
+            "description": "Serialize the generated Shoe object and send it to Kafka using the asynchronous producer.",
+            "dependencies": [
+              "7.2"
+            ],
+            "details": "Utilize the Schema Registry client and Kafka producer to serialize each Shoe object and produce it to the target topic asynchronously.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Manage Loop Timing and Message Frequency",
+            "description": "Control the timing of the loop to ensure messages are produced at a regular interval (e.g., once per second).",
+            "dependencies": [
+              "7.3"
+            ],
+            "details": "Implement timing logic using sleep or ticker mechanisms to regulate message production frequency.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Monitor Kafka Topic for Output Verification",
+            "description": "Set up monitoring to verify that messages are being produced to the Kafka topic as expected.",
+            "dependencies": [
+              "7.4"
+            ],
+            "details": "Use a Kafka consumer or Confluent Cloud UI to observe the topic and confirm continuous, valid message ingestion.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Robust Asynchronous Event Handling",
+        "description": "Implement dedicated goroutines to consume from the `sarama` producer's `Successes()` and `Errors()` channels. Log all outcomes clearly to monitor producer health and prevent silent data loss.",
+        "details": "This addresses a key risk identified in the PRD. Logs should be structured and actionable, indicating which messages succeeded or failed.",
+        "testStrategy": "Run the producer and verify that logs for both successful and (if possible to simulate) failed productions appear correctly. For example, temporarily stop Kafka to trigger and observe error handling.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Graceful Shutdown",
+        "description": "Add signal handling (for SIGINT, SIGTERM) to allow the producer to shut down cleanly. On receiving a signal, the application should stop generating new messages, flush any buffered messages, and close the producer.",
+        "details": "This is a 'Future Enhancement' from the PRD that is critical for production-readiness, ensuring no in-flight data is lost when the application is stopped.",
+        "testStrategy": "Run the application and stop it with Ctrl+C. Check the logs to confirm that a shutdown sequence is initiated and that the producer reports a clean exit.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Containerize the Application with a Dockerfile",
+        "description": "Create a `Dockerfile` to build and run the Golang producer in a container. The Dockerfile should handle dependency management, compilation, and define how to run the final executable.",
+        "details": "This makes the producer easily portable and deployable in various environments, aligning with modern development practices.",
+        "testStrategy": "Build a Docker image using `docker build`. Run the image using `docker run`, passing the necessary environment variables. Verify that the container starts and begins producing messages to Kafka.",
+        "priority": "low",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-18T10:02:49.096Z",
+      "updated": "2025-08-18T11:11:00.161Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
