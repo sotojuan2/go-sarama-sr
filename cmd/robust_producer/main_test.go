@@ -20,10 +20,10 @@ import (
 // MockAsyncProducer simulates Sarama async producer for testing
 type MockAsyncProducer struct {
 	mock.Mock
-	inputChan    chan *sarama.ProducerMessage
-	successChan  chan *sarama.ProducerMessage
-	errorChan    chan *sarama.ProducerError
-	closed       bool
+	inputChan   chan *sarama.ProducerMessage
+	successChan chan *sarama.ProducerMessage
+	errorChan   chan *sarama.ProducerError
+	closed      bool
 }
 
 func NewMockAsyncProducer() *MockAsyncProducer {
@@ -163,7 +163,7 @@ func TestRobustProducerErrorClassification(t *testing.T) {
 // TestRetryPolicyBackoff tests exponential backoff calculation
 func TestRetryPolicyBackoff(t *testing.T) {
 	policy := errorhandling.DefaultRetryPolicy()
-	
+
 	tests := []struct {
 		attempt  int
 		expected time.Duration
@@ -191,21 +191,21 @@ func TestMessageFailureTracking(t *testing.T) {
 		Key:   sarama.StringEncoder("test-key"),
 		Value: sarama.ByteEncoder("test-value"),
 	}
-	
+
 	err := errors.New("network timeout")
 	failure := errorhandling.NewMessageFailure(msg, err)
-	
+
 	assert.Equal(t, msg, failure.Message)
 	assert.Equal(t, err, failure.Error)
 	assert.Equal(t, 1, failure.AttemptCount)
 	assert.True(t, failure.Classification.Retryable)
 	assert.Equal(t, "network_error", failure.Classification.Code)
-	
+
 	// Test retry update
 	policy := errorhandling.DefaultRetryPolicy()
 	oldNextRetry := failure.NextRetry
 	failure.UpdateForRetry(policy)
-	
+
 	assert.Equal(t, 2, failure.AttemptCount)
 	assert.True(t, failure.NextRetry.After(oldNextRetry))
 }
@@ -215,7 +215,7 @@ func TestRobustProducerStats(t *testing.T) {
 	stats := &RobustProducerStats{
 		StartTime: time.Now(),
 	}
-	
+
 	// Test increment operations
 	stats.IncrementProduced()
 	stats.IncrementRetried()
@@ -224,9 +224,9 @@ func TestRobustProducerStats(t *testing.T) {
 	stats.IncrementPermanentErrors()
 	stats.AddLatency(150.0)
 	stats.AddLatency(250.0)
-	
+
 	produced, retried, dlq, transient, permanent, avgLatency, _ := stats.GetStats()
-	
+
 	assert.Equal(t, int64(1), produced)
 	assert.Equal(t, int64(1), retried)
 	assert.Equal(t, int64(1), dlq)
@@ -246,23 +246,23 @@ func TestRobustProducerEventHandling(t *testing.T) {
 			LogLevel: "debug",
 		},
 	}
-	
+
 	// Create test logger
 	logger, err := logging.NewProducerLogger("debug")
 	assert.NoError(t, err)
 	defer logger.Close()
-	
+
 	// Create mock producer
 	mockProducer := NewMockAsyncProducer()
 	mockDLQProducer := NewMockAsyncProducer()
-	
+
 	// Create test producer metrics
 	metrics := metrics.NewProducerMetrics()
-	
+
 	// Create test robust producer
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	rp := &RobustProducer{
 		cfg:            cfg,
 		producer:       mockProducer,
@@ -278,7 +278,7 @@ func TestRobustProducerEventHandling(t *testing.T) {
 		errorEvents:    make(chan *sarama.ProducerError, 10),
 		retryQueue:     make(chan *errorhandling.MessageFailure, 10),
 	}
-	
+
 	// Test successful message handling
 	t.Run("SuccessfulMessageHandling", func(t *testing.T) {
 		msg := &sarama.ProducerMessage{
@@ -288,13 +288,13 @@ func TestRobustProducerEventHandling(t *testing.T) {
 			Timestamp: time.Now(),
 			Metadata:  time.Now(),
 		}
-		
+
 		rp.handleSuccessfulMessage(msg)
-		
+
 		produced, _, _, _, _, _, _ := rp.stats.GetStats()
 		assert.Equal(t, int64(1), produced)
 	})
-	
+
 	// Test error message handling
 	t.Run("ErrorMessageHandling", func(t *testing.T) {
 		msg := &sarama.ProducerMessage{
@@ -302,24 +302,24 @@ func TestRobustProducerEventHandling(t *testing.T) {
 			Key:   sarama.StringEncoder("error-key"),
 			Value: sarama.ByteEncoder("error-value"),
 		}
-		
+
 		errEvent := &sarama.ProducerError{
 			Msg: msg,
 			Err: errors.New("network timeout"),
 		}
-		
+
 		rp.handleErroredMessage(errEvent)
-		
+
 		// Check if message was added to failed messages
 		key := string(msg.Key.(sarama.StringEncoder))
 		_, exists := rp.failedMessages[key]
 		assert.True(t, exists)
-		
+
 		// Check stats
 		_, _, _, transient, _, _, _ := rp.stats.GetStats()
 		assert.Equal(t, int64(1), transient)
 	})
-	
+
 	// Test DLQ handling
 	t.Run("DeadLetterQueueHandling", func(t *testing.T) {
 		msg := &sarama.ProducerMessage{
@@ -327,17 +327,17 @@ func TestRobustProducerEventHandling(t *testing.T) {
 			Key:   sarama.StringEncoder("dlq-key"),
 			Value: sarama.ByteEncoder("dlq-value"),
 		}
-		
+
 		failure := errorhandling.NewMessageFailure(msg, errors.New("auth failed"))
 		rp.sendToDeadLetterQueue(failure, "non_retryable_error")
-		
+
 		// Check if DLQ message was sent (mock would receive it)
 		select {
 		case dlqMsg := <-mockDLQProducer.inputChan:
 			assert.Equal(t, "test-topic.dlq", dlqMsg.Topic)
 			assert.Equal(t, msg.Key, dlqMsg.Key)
 			assert.Equal(t, msg.Value, dlqMsg.Value)
-			
+
 			// Check headers
 			foundReason := false
 			for _, header := range dlqMsg.Headers {
@@ -350,7 +350,7 @@ func TestRobustProducerEventHandling(t *testing.T) {
 		case <-time.After(1 * time.Second):
 			t.Fatal("DLQ message not sent within timeout")
 		}
-		
+
 		// Check stats
 		_, _, dlq, _, _, _, _ := rp.stats.GetStats()
 		assert.Equal(t, int64(1), dlq)
@@ -366,7 +366,7 @@ func BenchmarkErrorClassification(b *testing.B) {
 		fmt.Errorf("message too large"),
 		fmt.Errorf("quota exceeded"),
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		err := errors[i%len(errors)]

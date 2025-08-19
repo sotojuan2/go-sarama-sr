@@ -1,3 +1,22 @@
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Go build artifacts
+/bin/
+/dist/
+/build/
+
+# Generated Protocol Buffer files (regenerated in devcontainer)
+pb/*.pb.go
+
 # Logs
 logs
 *.log
@@ -8,9 +27,20 @@ dev-debug.log
 
 # Dependency directories
 node_modules/
+vendor/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
+
+# 🔐 SECURITY: Confluent Cloud credentials and config files
+# These files contain API keys and secrets - NEVER commit them!
+confluent_cli/*.config
+confluent_cli/cloud_sasl.config
+*.config
+*.sasl
+*.credentials
 
 # Editor directories and files
 .idea
@@ -20,6 +50,29 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+*~
 
 # OS specific
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development and testing
+/coverage/
+/tmp/
+/temp/
+*.tmp
+*.temp
+
+# Legacy code (preserved but not tracked for changes)
+legacy/
+
+# TaskMaster generated files
+.taskmaster/reports/
+.taskmaster/cache/

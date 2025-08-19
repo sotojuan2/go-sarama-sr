@@ -46,7 +46,7 @@ func TestRobustProducerIntegration(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("# Test metrics\ntest_counter 1\n"))
 			})
-			
+
 			// Use context to control server lifecycle
 			select {
 			case <-ctx.Done():
@@ -70,10 +70,10 @@ func TestRobustProducerIntegration(t *testing.T) {
 	t.Run("ErrorScenarioSimulation", func(t *testing.T) {
 		// Test various error scenarios in isolation
 		testCases := []struct {
-			scenario     string
-			errorType    string
-			expectRetry  bool
-			expectDLQ    bool
+			scenario    string
+			errorType   string
+			expectRetry bool
+			expectDLQ   bool
 		}{
 			{
 				scenario:    "Network timeout",
@@ -106,9 +106,9 @@ func TestRobustProducerIntegration(t *testing.T) {
 				// Simulate error classification
 				err := fmt.Errorf("%s", tc.errorType)
 				classification := errorhandling.ClassifyError(err)
-				
+
 				assert.Equal(t, tc.expectRetry, classification.Retryable)
-				
+
 				if tc.expectDLQ && !classification.Retryable {
 					// Non-retryable errors should go to DLQ
 					assert.False(t, classification.Retryable)
@@ -132,11 +132,11 @@ func TestRobustProducerIntegration(t *testing.T) {
 		duration := time.Since(start)
 
 		produced, _, _, _, _, avgLatency, _ := stats.GetStats()
-		
+
 		assert.Equal(t, int64(100), produced)
 		assert.Greater(t, avgLatency, 0.0)
 		assert.Less(t, duration, 1*time.Second) // Should be very fast in test
-		
+
 		// Calculate throughput
 		throughput := float64(produced) / duration.Seconds()
 		assert.Greater(t, throughput, 10000.0) // Should be > 10k msgs/sec in test
@@ -144,14 +144,14 @@ func TestRobustProducerIntegration(t *testing.T) {
 
 	t.Run("RetryLogicValidation", func(t *testing.T) {
 		policy := errorhandling.DefaultRetryPolicy()
-		
+
 		// Test exponential backoff progression
 		backoffs := []time.Duration{}
 		for i := 0; i < 6; i++ {
 			backoff := policy.CalculateBackoff(i)
 			backoffs = append(backoffs, backoff)
 		}
-		
+
 		// Verify exponential progression
 		assert.Equal(t, 1*time.Second, backoffs[0])
 		assert.Equal(t, 2*time.Second, backoffs[1])
@@ -159,22 +159,22 @@ func TestRobustProducerIntegration(t *testing.T) {
 		assert.Equal(t, 8*time.Second, backoffs[3])
 		assert.Equal(t, 16*time.Second, backoffs[4])
 		assert.Equal(t, 30*time.Second, backoffs[5]) // Capped at max
-		
+
 		// Test retry decision logic
 		transientError := errorhandling.ClassifyError(fmt.Errorf("connection timeout"))
 		permanentError := errorhandling.ClassifyError(fmt.Errorf("auth failed"))
-		
+
 		assert.True(t, policy.ShouldRetry(transientError, 1))
 		assert.True(t, policy.ShouldRetry(transientError, 2))
 		assert.False(t, policy.ShouldRetry(transientError, 5)) // Exceeds max retries
-		
+
 		assert.False(t, policy.ShouldRetry(permanentError, 1)) // Non-retryable
 	})
 
 	t.Run("MemoryLeakTest", func(t *testing.T) {
 		// Test that failed message tracking doesn't cause memory leaks
 		failedMessages := make(map[string]*errorhandling.MessageFailure)
-		
+
 		// Simulate adding many failed messages
 		for i := 0; i < 1000; i++ {
 			key := fmt.Sprintf("key-%d", i)
@@ -185,14 +185,14 @@ func TestRobustProducerIntegration(t *testing.T) {
 			failure := errorhandling.NewMessageFailure(msg, fmt.Errorf("test error"))
 			failedMessages[key] = failure
 		}
-		
+
 		assert.Equal(t, 1000, len(failedMessages))
-		
+
 		// Simulate cleanup (successful retries or DLQ routing)
 		for key := range failedMessages {
 			delete(failedMessages, key)
 		}
-		
+
 		assert.Equal(t, 0, len(failedMessages))
 	})
 
@@ -201,10 +201,10 @@ func TestRobustProducerIntegration(t *testing.T) {
 		stats := &RobustProducerStats{
 			StartTime: time.Now(),
 		}
-		
+
 		// Run concurrent operations
 		done := make(chan bool, 4)
-		
+
 		// Goroutine 1: Increment produced
 		go func() {
 			for i := 0; i < 100; i++ {
@@ -212,7 +212,7 @@ func TestRobustProducerIntegration(t *testing.T) {
 			}
 			done <- true
 		}()
-		
+
 		// Goroutine 2: Increment errors
 		go func() {
 			for i := 0; i < 50; i++ {
@@ -220,7 +220,7 @@ func TestRobustProducerIntegration(t *testing.T) {
 			}
 			done <- true
 		}()
-		
+
 		// Goroutine 3: Add latency
 		go func() {
 			for i := 0; i < 100; i++ {
@@ -228,7 +228,7 @@ func TestRobustProducerIntegration(t *testing.T) {
 			}
 			done <- true
 		}()
-		
+
 		// Goroutine 4: Read stats
 		go func() {
 			for i := 0; i < 10; i++ {
@@ -237,12 +237,12 @@ func TestRobustProducerIntegration(t *testing.T) {
 			}
 			done <- true
 		}()
-		
+
 		// Wait for all goroutines
 		for i := 0; i < 4; i++ {
 			<-done
 		}
-		
+
 		produced, _, _, transient, _, _, _ := stats.GetStats()
 		assert.Equal(t, int64(100), produced)
 		assert.Equal(t, int64(50), transient)
@@ -255,13 +255,13 @@ func TestRobustProducerFaultTolerance(t *testing.T) {
 		// Test behavior when channels are full
 		successChan := make(chan *sarama.ProducerMessage, 2)
 		errorChan := make(chan *sarama.ProducerError, 2)
-		
+
 		// Fill channels to capacity
 		for i := 0; i < 2; i++ {
 			successChan <- &sarama.ProducerMessage{}
 			errorChan <- &sarama.ProducerError{}
 		}
-		
+
 		// Test non-blocking behavior
 		select {
 		case successChan <- &sarama.ProducerMessage{}:
@@ -269,18 +269,18 @@ func TestRobustProducerFaultTolerance(t *testing.T) {
 		default:
 			// Expected behavior - channel is full
 		}
-		
+
 		select {
 		case errorChan <- &sarama.ProducerError{}:
 			t.Fatal("Should not be able to write to full channel")
 		default:
 			// Expected behavior - channel is full
 		}
-		
+
 		// Drain channels
 		<-successChan
 		<-errorChan
-		
+
 		// Should be able to write now
 		select {
 		case successChan <- &sarama.ProducerMessage{}:
@@ -293,13 +293,13 @@ func TestRobustProducerFaultTolerance(t *testing.T) {
 	t.Run("GracefulShutdown", func(t *testing.T) {
 		// Test graceful shutdown behavior
 		ctx, cancel := context.WithCancel(context.Background())
-		
+
 		// Simulate goroutine that respects context cancellation
 		done := make(chan bool)
 		go func() {
 			ticker := time.NewTicker(10 * time.Millisecond)
 			defer ticker.Stop()
-			
+
 			for {
 				select {
 				case <-ctx.Done():
@@ -310,13 +310,13 @@ func TestRobustProducerFaultTolerance(t *testing.T) {
 				}
 			}
 		}()
-		
+
 		// Let it run briefly
 		time.Sleep(50 * time.Millisecond)
-		
+
 		// Cancel and verify shutdown
 		cancel()
-		
+
 		select {
 		case <-done:
 			// Expected - goroutine shut down gracefully
@@ -332,7 +332,7 @@ func TestRobustProducerFaultTolerance(t *testing.T) {
 			fmt.Errorf("timeout"),
 			fmt.Errorf("temporary failure"),
 		}
-		
+
 		for _, err := range errors {
 			classification := errorhandling.ClassifyError(err)
 			if classification.Retryable {
@@ -351,13 +351,13 @@ func TestDocumentationExamples(t *testing.T) {
 	t.Run("BasicUsageExample", func(t *testing.T) {
 		// This would test the basic usage example from documentation
 		// Verifying that the API works as documented
-		
+
 		stats := &RobustProducerStats{StartTime: time.Now()}
-		
+
 		// Simulate the documented workflow
 		stats.IncrementProduced()
 		produced, _, _, _, _, _, duration := stats.GetStats()
-		
+
 		assert.Equal(t, int64(1), produced)
 		assert.Greater(t, duration, 0*time.Second)
 	})
@@ -366,7 +366,7 @@ func TestDocumentationExamples(t *testing.T) {
 		// Test the error handling example from documentation
 		err := fmt.Errorf("network connection failed")
 		classification := errorhandling.ClassifyError(err)
-		
+
 		assert.True(t, classification.Retryable)
 		assert.Equal(t, "network_error", classification.Code)
 		assert.Equal(t, 5, classification.MaxRetries)
