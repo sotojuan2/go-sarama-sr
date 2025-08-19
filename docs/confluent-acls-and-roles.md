@@ -1,64 +1,64 @@
-# Confluent Cloud ACLs y Roles
+# Confluent Cloud ACLs and Roles
 
-Esta documentación explica los roles y ACLs (Access Control Lists) necesarios para trabajar con Confluent Cloud, tanto para Kafka como para Schema Registry.
+This documentation explains the roles and ACLs (Access Control Lists) required to work with Confluent Cloud, both for Kafka and Schema Registry.
 
-## Tabla de Contenidos
+## Table of Contents
 
-- [Conceptos Básicos](#conceptos-básicos)
-- [Service Accounts Requeridas](#service-accounts-requeridas)
-- [ACLs para Cluster Básico](#acls-para-cluster-básico)
-- [Roles RBAC para Cluster Dedicado](#roles-rbac-para-cluster-dedicado)
-- [Configuración en .env](#configuración-en-env)
-- [Scripts de Configuración](#scripts-de-configuración)
-- [Verificación y Troubleshooting](#verificación-y-troubleshooting)
+- [Basic Concepts](#basic-concepts)
+- [Required Service Accounts](#required-service-accounts)
+- [ACLs for Basic Cluster](#acls-for-basic-cluster)
+- [RBAC Roles for Dedicated Cluster](#rbac-roles-for-dedicated-cluster)
+- [Configuration in .env](#configuration-in-env)
+- [Configuration Scripts](#configuration-scripts)
+- [Verification and Troubleshooting](#verification-and-troubleshooting)
 
-## Conceptos Básicos
+## Basic Concepts
 
-### Diferencias entre ACLs y RBAC
+### Differences between ACLs and RBAC
 
-- **ACLs (Access Control Lists)**: Usadas en clusters **básicos** de Confluent Cloud
-- **RBAC (Role-Based Access Control)**: Usadas en clusters **dedicados** y **standard**
+- **ACLs (Access Control Lists)**: Used in **basic** Confluent Cloud clusters
+- **RBAC (Role-Based Access Control)**: Used in **dedicated** and **standard** clusters
 
 ### Service Accounts vs User Accounts
 
-- **Service Accounts**: Para aplicaciones automatizadas (recomendado para producción)
-- **User Accounts**: Para desarrolladores individuales
+- **Service Accounts**: For automated applications (recommended for production)
+- **User Accounts**: For individual developers
 
-## Service Accounts Requeridas
+## Required Service Accounts
 
-Para este proyecto necesitas **dos service accounts** con sus respectivas API keys:
+For this project you need **two service accounts** with their respective API keys:
 
-### 1. Service Account para Kafka
+### 1. Service Account for Kafka
 ```bash
-# Crear service account para Kafka
-confluent iam service-account create "go-sarama-kafka" --description "Service account para productores/consumidores Kafka"
+# Create service account for Kafka
+confluent iam service-account create "go-sarama-kafka" --description "Service account for Kafka producers/consumers"
 
-# Ejemplo de respuesta:
+# Example response:
 # +-------------+------------------+
 # | ID          | sa-pg9nnk5       |
 # | Name        | go-sarama-kafka  |
-# | Description | Service account para productores/consumidores Kafka |
+# | Description | Service account for Kafka producers/consumers |
 # +-------------+------------------+
 ```
 
-### 2. Service Account para Schema Registry
+### 2. Service Account for Schema Registry
 ```bash
-# Crear service account para Schema Registry
-confluent iam service-account create "go-sarama-sr" --description "Service account para Schema Registry"
+# Create service account for Schema Registry
+confluent iam service-account create "go-sarama-sr" --description "Service account for Schema Registry"
 
-# Ejemplo de respuesta:
+# Example response:
 # +-------------+------------------+
 # | ID          | sa-xq7ookz       |
 # | Name        | go-sarama-sr     |
-# | Description | Service account para Schema Registry |
+# | Description | Service account for Schema Registry |
 # +-------------+------------------+
 ```
 
-## ACLs para Cluster Básico
+## ACLs for Basic Cluster
 
-### Visualización de ACLs Existentes
+### Current ACLs Visualization
 
-Basándose en la imagen proporcionada, las ACLs configuradas son:
+Based on the provided image, the configured ACLs are:
 
 ```
 Principal         | Permission | Operation        | Resource Type | Resource Name | Pattern Type
@@ -68,22 +68,22 @@ User:sa-pg9nnk5   | ALLOW      | READ             | TOPIC         | js          
 User:sa-pg9nnk5   | ALLOW      | WRITE            | TOPIC         | js            | PREFIXED
 ```
 
-### Comandos para Configurar ACLs en Cluster Básico
+### Commands to Configure ACLs in Basic Cluster
 
-#### 1. ACLs para Kafka (Service Account: sa-pg9nnk5)
+#### 1. ACLs for Kafka (Service Account: sa-pg9nnk5)
 
 ```bash
-# Listar ACLs existentes
+# List existing ACLs
 confluent kafka acl list --service-account sa-pg9nnk5
 
-# IDEMPOTENT_WRITE en cluster (para productores idempotentes)
+# IDEMPOTENT_WRITE on cluster (for idempotent producers)
 confluent kafka acl create \
   --allow \
   --service-account sa-pg9nnk5 \
   --operation IDEMPOTENT_WRITE \
   --cluster-scope
 
-# READ en tópicos con prefijo "js" (para consumidores)
+# READ on topics with prefix "js" (for consumers)
 confluent kafka acl create \
   --allow \
   --service-account sa-pg9nnk5 \
@@ -91,7 +91,7 @@ confluent kafka acl create \
   --topic js \
   --prefix
 
-# WRITE en tópicos con prefijo "js" (para productores)
+# WRITE on topics with prefix "js" (for producers)
 confluent kafka acl create \
   --allow \
   --service-account sa-pg9nnk5 \
@@ -99,7 +99,7 @@ confluent kafka acl create \
   --topic js \
   --prefix
 
-# READ en consumer groups (necesario para consumidores)
+# READ on consumer groups (required for consumers)
 confluent kafka acl create \
   --allow \
   --service-account sa-pg9nnk5 \
@@ -108,42 +108,42 @@ confluent kafka acl create \
   --prefix
 ```
 
-#### 2. API Keys para Kafka
+#### 2. API Keys for Kafka
 
 ```bash
-# Crear API key para el service account de Kafka
+# Create API key for Kafka service account
 confluent api-key create --resource <KAFKA_CLUSTER_ID> --service-account sa-pg9nnk5
 
-# Ejemplo de salida:
+# Example output:
 # +------------+------------------------------------------------------------------+
 # | API Key    | EW6SNF25TI73HOU7                                                 |
 # | API Secret | cflt+dflBDGCBnaVcLe7DcGa9bYtdQtWWLhji/lH5YCYF1MKjnehgvm2sVmNLmGQ |
 # +------------+------------------------------------------------------------------+
 ```
 
-#### 3. ACLs para Schema Registry
+#### 3. ACLs for Schema Registry
 
-Para Schema Registry en cluster básico, también se usan ACLs:
+For Schema Registry in basic cluster, ACLs are also used:
 
 ```bash
-# Crear API key para Schema Registry
+# Create API key for Schema Registry
 confluent api-key create --resource <SCHEMA_REGISTRY_CLUSTER_ID> --service-account sa-xq7ookz
 
-# Ejemplo de salida:
+# Example output:
 # +------------+------------------------------------------------------------------+
 # | API Key    | CCCB5CHQBSL7FPUK                                                 |
 # | API Secret | cflt/NDN30Aa/Eqq4shUBhf2O7GLU5RPsvEpxpqWzSg5yRAvBieeLKa99dt/16PA |
 # +------------+------------------------------------------------------------------+
 ```
 
-## Roles RBAC para Cluster Dedicado
+## RBAC Roles for Dedicated Cluster
 
-### Schema Registry RBAC (Clusters Dedicados/Standard)
+### Schema Registry RBAC (Dedicated/Standard Clusters)
 
-Si usas un cluster dedicado o standard, necesitas configurar roles RBAC:
+If you use a dedicated or standard cluster, you need to configure RBAC roles:
 
 ```bash
-# ResourceOwner para todos los subjects en Schema Registry
+# ResourceOwner for all subjects in Schema Registry
 confluent iam rbac role-binding create \
   --principal User:sa-xq7ookz \
   --role ResourceOwner \
@@ -151,7 +151,7 @@ confluent iam rbac role-binding create \
   --schema-registry-cluster lsrc-9380d5 \
   --resource "Subject:*"
 
-# DeveloperRead para leer schemas (alternativa más restrictiva)
+# DeveloperRead to read schemas (more restrictive alternative)
 confluent iam rbac role-binding create \
   --principal User:sa-xq7ookz \
   --role DeveloperRead \
@@ -159,7 +159,7 @@ confluent iam rbac role-binding create \
   --schema-registry-cluster lsrc-9380d5 \
   --resource "Subject:js_shoe-value"
 
-# DeveloperWrite para escribir schemas
+# DeveloperWrite to write schemas
 confluent iam rbac role-binding create \
   --principal User:sa-xq7ookz \
   --role DeveloperWrite \
@@ -168,10 +168,10 @@ confluent iam rbac role-binding create \
   --resource "Subject:js_shoe-value"
 ```
 
-### Kafka RBAC (Clusters Dedicados/Standard)
+### Kafka RBAC (Dedicated/Standard Clusters)
 
 ```bash
-# DeveloperWrite para topics
+# DeveloperWrite for topics
 confluent iam rbac role-binding create \
   --principal User:sa-pg9nnk5 \
   --role DeveloperWrite \
@@ -179,7 +179,7 @@ confluent iam rbac role-binding create \
   --kafka-cluster lkc-xxxxx \
   --resource "Topic:js_shoe"
 
-# DeveloperRead para consumer groups
+# DeveloperRead for consumer groups
 confluent iam rbac role-binding create \
   --principal User:sa-pg9nnk5 \
   --role DeveloperRead \
@@ -188,9 +188,9 @@ confluent iam rbac role-binding create \
   --resource "Group:go-sarama-consumer"
 ```
 
-## Configuración en .env
+## Configuration in .env
 
-El archivo `.env` debe contener las credenciales de ambas service accounts:
+The `.env` file must contain credentials for both service accounts:
 
 ```env
 # Kafka Cluster Configuration
@@ -207,9 +207,9 @@ SCHEMA_REGISTRY_API_KEY=CCCB5CHQBSL7FPUK
 SCHEMA_REGISTRY_API_SECRET=cflt/NDN30Aa/Eqq4shUBhf2O7GLU5RPsvEpxpqWzSg5yRAvBieeLKa99dt/16PA
 ```
 
-## Scripts de Configuración
+## Configuration Scripts
 
-### Script para Generar ACLs Automáticamente
+### Script to Generate ACLs Automatically
 
 ```bash
 #!/bin/bash
@@ -222,137 +222,137 @@ SERVICE_ACCOUNT_SR="sa-xq7ookz"
 TOPIC_PREFIX="js"
 CONSUMER_GROUP_PREFIX="go-sarama-consumer"
 
-echo "🔧 Configurando ACLs para Kafka..."
+echo "🔧 Setting up ACLs for Kafka..."
 
-# ACLs para Kafka
+# ACLs for Kafka
 confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_KAFKA --operation IDEMPOTENT_WRITE --cluster-scope
 confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_KAFKA --operation READ --topic $TOPIC_PREFIX --prefix
 confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_KAFKA --operation WRITE --topic $TOPIC_PREFIX --prefix
 confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_KAFKA --operation READ --consumer-group $CONSUMER_GROUP_PREFIX --prefix
 
-echo "✅ ACLs configuradas correctamente"
+echo "✅ ACLs configured successfully"
 ```
 
-## Uso de ACLs con Scripts de Consumo
+## Using ACLs with Consumer Scripts
 
-### Script para Verificar Magic Byte y Schema ID
+### Script for Magic Byte and Schema ID Verification
 
-El script `confluent_cli/schema_registry_consumer.sh` usa las ACLs de **READ** configuradas:
+The `confluent_cli/schema_registry_consumer.sh` script uses the configured **READ** ACLs:
 
 ```bash
-# Las ACLs de READ permiten:
-# 1. Leer mensajes del tópico js_shoe
-# 2. Decodificar el magic byte (0x00)
-# 3. Extraer el schema ID
-# 4. Consultar el schema en Schema Registry
+# READ ACLs allow:
+# 1. Read messages from js_shoe topic
+# 2. Decode magic byte (0x00)
+# 3. Extract schema ID
+# 4. Query schema in Schema Registry
 
 ./confluent_cli/schema_registry_consumer.sh
 ```
 
-### Permisos Requeridos para el Script
+### Required Permissions for the Script
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Flujo de Permisos para schema_registry_consumer.sh              │
+│ Permission Flow for schema_registry_consumer.sh                 │
 ├─────────────────────────────────────────────────────────────────┤
-│ 1. READ en topic js_shoe (ACL Kafka)                           │
-│    └─> Leer mensajes binarios del tópico                       │
+│ 1. READ on topic js_shoe (Kafka ACL)                           │
+│    └─> Read binary messages from topic                         │
 │                                                                 │
-│ 2. Decodificar mensaje localmente                              │
+│ 2. Local message decoding                                       │
 │    ├─> Magic byte (0x00)                                       │
 │    ├─> Schema ID (4 bytes)                                     │
-│    └─> Payload Avro                                            │
+│    └─> Avro payload                                            │
 │                                                                 │
-│ 3. READ en Schema Registry (API Key SR)                        │
-│    └─> Consultar schema por ID                                 │
+│ 3. READ on Schema Registry (SR API Key)                        │
+│    └─> Query schema by ID                                      │
 │                                                                 │
-│ 4. Mostrar información formateada                              │
+│ 4. Display formatted information                               │
 │    ├─> Offset, partition, timestamp                            │
-│    ├─> Schema ID y detalles                                    │
-│    └─> Payload decodificado                                    │
+│    ├─> Schema ID and details                                   │
+│    └─> Decoded payload                                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Verificación y Troubleshooting
+## Verification and Troubleshooting
 
-### Verificar ACLs Configuradas
+### Verify Configured ACLs
 
 ```bash
-# Listar todas las ACLs para el service account
+# List all ACLs for the service account
 confluent kafka acl list --service-account sa-pg9nnk5
 
-# Verificar conectividad a Kafka
+# Verify Kafka connectivity
 ./confluent_cli/test_consumer.sh
 
-# Verificar conectividad a Schema Registry
+# Verify Schema Registry connectivity
 curl -u "${SCHEMA_REGISTRY_API_KEY}:${SCHEMA_REGISTRY_API_SECRET}" \
   "${SCHEMA_REGISTRY_URL}/subjects"
 ```
 
-### Problemas Comunes
+### Common Issues
 
-#### 1. Error de Autorización en Kafka
+#### 1. Kafka Authorization Error
 ```
 Error: Topic authorization failed
 ```
-**Solución**: Verificar que el service account tiene permisos READ/WRITE en el tópico
+**Solution**: Verify that the service account has READ/WRITE permissions on the topic
 
-#### 2. Error de Schema Registry
+#### 2. Schema Registry Error
 ```
 Error: 401 Unauthorized
 ```
-**Solución**: Verificar que las credenciales de Schema Registry son correctas
+**Solution**: Verify that Schema Registry credentials are correct
 
 #### 3. Consumer Group Permissions
 ```
 Error: Group authorization failed
 ```
-**Solución**: Agregar permisos READ para consumer groups:
+**Solution**: Add READ permissions for consumer groups:
 ```bash
 confluent kafka acl create --allow --service-account sa-pg9nnk5 --operation READ --consumer-group go-sarama-consumer --prefix
 ```
 
-### Comandos de Diagnóstico
+### Diagnostic Commands
 
 ```bash
-# Verificar service accounts
+# Verify service accounts
 confluent iam service-account list
 
-# Verificar API keys
+# Verify API keys
 confluent api-key list
 
-# Verificar clusters disponibles
+# Verify available clusters
 confluent kafka cluster list
 
-# Verificar Schema Registry
+# Verify Schema Registry
 confluent schema-registry cluster list
 ```
 
-## Seguridad y Buenas Prácticas
+## Security and Best Practices
 
-### 1. Principio de Menor Privilegio
-- Usa permisos específicos en lugar de wildcards cuando sea posible
-- Separa service accounts por función (Kafka vs Schema Registry)
+### 1. Principle of Least Privilege
+- Use specific permissions instead of wildcards when possible
+- Separate service accounts by function (Kafka vs Schema Registry)
 
-### 2. Rotación de Credenciales
+### 2. Credential Rotation
 ```bash
-# Crear nueva API key
+# Create new API key
 confluent api-key create --resource <CLUSTER_ID> --service-account <SA_ID>
 
-# Eliminar API key antigua
+# Delete old API key
 confluent api-key delete <OLD_API_KEY>
 ```
 
-### 3. Monitoreo de Accesos
-- Revisa regularmente los logs de auditoría
-- Usa herramientas de monitoreo para detectar accesos anómalos
+### 3. Access Monitoring
+- Regularly review audit logs
+- Use monitoring tools to detect anomalous access
 
-### 4. Variables de Entorno
-- Nunca hardcodees credenciales en el código
-- Usa archivos `.env` locales (no versionados)
-- En producción, usa sistemas de gestión de secretos
+### 4. Environment Variables
+- Never hardcode credentials in code
+- Use local `.env` files (not versioned)
+- In production, use secret management systems
 
-## Referencias
+## References
 
 - [Confluent Cloud ACL Documentation](https://docs.confluent.io/cloud/current/access-management/acl.html)
 - [Confluent Cloud RBAC Documentation](https://docs.confluent.io/cloud/current/access-management/rbac.html)
