@@ -220,6 +220,27 @@ env-check: ## Check environment configuration
 	done
 	@echo "  ... (and more)"
 
+## Consumer Commands
+
+consumer-config: ## Generate Confluent Cloud consumer configuration
+	@echo "🔧 Generating Confluent Cloud consumer configuration..."
+	@./confluent_cli/generate_config.sh
+
+consumer-run: consumer-config ## Run Schema Registry consumer (from beginning)
+	@echo "🔍 Starting Schema Registry consumer..."
+	@./confluent_cli/schema_registry_consumer.sh
+
+consumer-latest: consumer-config ## Run Schema Registry consumer (latest only)
+	@echo "🔍 Starting Schema Registry consumer (latest messages)..."
+	@./confluent_cli/schema_registry_consumer.sh $${KAFKA_TOPIC:-js_shoe} --from-latest
+
+consumer-topic: consumer-config ## Run consumer for specific topic (usage: make consumer-topic TOPIC=my-topic)
+	@echo "🔍 Starting consumer for topic: $${TOPIC:-js_shoe}..."
+	@./confluent_cli/schema_registry_consumer.sh $${TOPIC:-js_shoe} --from-beginning
+
+consumer-help: ## Show consumer usage help
+	@./confluent_cli/schema_registry_consumer.sh --help
+
 # Help text
 $(shell echo "")
 $(shell echo "Quick Start:")
