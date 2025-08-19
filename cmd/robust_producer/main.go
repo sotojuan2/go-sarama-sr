@@ -326,9 +326,9 @@ func (rp *RobustProducer) startProduction(ctx context.Context) {
 func (rp *RobustProducer) produceMessage(ctx context.Context) error {
 	startTime := time.Now()
 
-		// Generate shoe data
+	// Generate shoe data
 	shoe := rp.generator.GenerateRandomShoe()
-	
+
 	// Serialize message
 	payload, err := rp.serializer.Serialize(rp.cfg.Kafka.Topic, shoe)
 	if err != nil {

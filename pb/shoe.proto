@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package shoe;
+
+// Go package option for correct import path and package naming
+option go_package = "github.com/go-sarama-sr/producer/pb;pb";
+
+// Shoe message representing a shoe product event
+// Compatible with Confluent Schema Registry and Kafka serialization
+message Shoe {
+  // Unique identifier for the shoe
+  int64 id = 1;
+  
+  // Brand name of the shoe
+  string brand = 2;
+  
+  // Product name of the shoe
+  string name = 3;
+  
+  // Sale price of the shoe
+  double sale_price = 4;
+  
+  // Rating of the shoe (typically 1-5 scale)
+  double rating = 5;
+}

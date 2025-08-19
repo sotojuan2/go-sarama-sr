@@ -279,8 +279,29 @@ func (cp *ContinuousProducer) handleSuccesses(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			// Continue draining until channel is closed
+			for success := range cp.producer.Successes() {
+				cp.stats.IncrementProduced()
+				if cp.cfg.App.LogLevel == "debug" {
+					shoeID := "unknown"
+					for _, header := range success.Headers {
+						if string(header.Key) == "shoe-id" {
+							shoeID = string(header.Value)
+							break
+						}
+					}
+					log.Printf("✅ [SHUTDOWN] Message flushed: Shoe ID=%s, Partition=%d, Offset=%d",
+						shoeID, success.Partition, success.Offset)
+				}
+			}
+			log.Println("📤 All successful messages drained during shutdown")
 			return
-		case success := <-cp.producer.Successes():
+		case success, ok := <-cp.producer.Successes():
+			if !ok {
+				// Channel closed, exit gracefully
+				log.Println("📤 Success channel closed")
+				return
+			}
 			cp.stats.IncrementProduced()
 
 			// Extract shoe ID from headers for logging
@@ -307,8 +328,19 @@ func (cp *ContinuousProducer) handleErrors(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			// Continue draining until channel is closed
+			for err := range cp.producer.Errors() {
+				cp.stats.IncrementErrors()
+				log.Printf("❌ [SHUTDOWN] Error flushed: %v", err.Err)
+			}
+			log.Println("❌ All error messages drained during shutdown")
 			return
-		case err := <-cp.producer.Errors():
+		case err, ok := <-cp.producer.Errors():
+			if !ok {
+				// Channel closed, exit gracefully
+				log.Println("❌ Error channel closed")
+				return
+			}
 			cp.stats.IncrementErrors()
 			log.Printf("❌ Message production error: %v", err.Err)
 		}
@@ -344,11 +376,13 @@ func (cp *ContinuousProducer) Close() error {
 	}
 
 	if cp.producer != nil {
-		err := cp.producer.Close()
-		if err != nil {
-			log.Printf("❌ Error closing producer: %v", err)
-			return err
-		}
+		// Use AsyncClose for better message flushing
+		log.Println("📤 Flushing buffered messages...")
+		cp.producer.AsyncClose()
+
+		// The handleSuccesses and handleErrors goroutines will continue
+		// draining channels until they're closed by AsyncClose
+		log.Println("⏳ Waiting for all messages to be processed...")
 	}
 
 	log.Println("✅ Continuous producer closed successfully")

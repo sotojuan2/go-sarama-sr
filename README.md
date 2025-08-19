@@ -24,22 +24,38 @@ This project implements a production-ready Kafka producer system that generates 
 
 ## 📁 Project Structure
 
+> **📋 Repository Reorganized!** See [REORGANIZATION.md](./REORGANIZATION.md) for detailed migration guide.
+
 ```
-.
-├── cmd/
-│   ├── continuous_producer/    # MVP continuous producer with graceful shutdown
-│   ├── enhanced_producer/      # Multiple production modes demo
-│   ├── robust_producer/        # Enterprise-grade producer with DLQ
-│   └── producer/              # Basic producer implementation
-├── pkg/
-│   ├── errorhandling/         # Error classification system
+go-sarama-sr/
+├── cmd/                        # 🚀 Main applications (executables)
+│   ├── continuous_producer/    # 🎯 MVP - Production-ready continuous producer
+│   ├── enhanced_producer/      # 🔧 Demo - Multiple production modes
+│   ├── robust_producer/        # 🏢 Enterprise - Full observability stack
+│   ├── producer/              # 📚 Basic - Simple producer example
+│   ├── performance_test/       # ⚡ Performance testing utility
+│   └── quick_test/            # 🚀 Quick connectivity test
+│
+├── pkg/                       # 📦 Public libraries (reusable)
+│   ├── errorhandling/         # Error classification and handling
 │   ├── generator/             # Random shoe data generation
+│   ├── kafka/                 # Kafka client utilities
 │   ├── logging/               # Structured logging with Zap
 │   ├── metrics/               # Prometheus metrics collection
 │   └── schemaregistry/        # Schema Registry client wrapper
-├── pb/                        # Generated Protobuf Go code
-├── internal/config/           # Configuration management
-└── bin/                       # Compiled binaries
+│
+├── internal/                  # 🔒 Private application code
+│   ├── config/                # Configuration management
+│   ├── generator/             # Internal data generators
+│   └── registry/              # Internal registry client
+│
+├── pb/                        # 🔧 Generated Protocol Buffer code
+├── test/                      # 🧪 Test files and utilities
+├── docs/                      # 📚 Documentation
+├── legacy/                    # 📦 Archived/deprecated files
+├── examples/                  # 💡 Usage examples (future)
+├── bin/                       # 🔨 Compiled binaries
+└── .devcontainer/             # 🐳 Development container configuration
 ```
 
 ## 🏗️ Producer Implementations
