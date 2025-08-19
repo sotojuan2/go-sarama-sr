@@ -247,6 +247,7 @@ go test -bench=. ./pkg/generator
 | Topic | Document | Description |
 |-------|----------|-------------|
 | **Architecture** | [Integration Flow](./docs/sarama-schema-registry-integration-flow.md) | Complete technical walkthrough of Sarama + Schema Registry integration |
+| **ACLs & RBAC** | [Confluent Cloud ACLs & Roles](./docs/confluent-acls-and-roles.md) | Guide to setting up proper permissions for Kafka and Schema Registry |
 | **Consumer Tools** | [Confluent CLI Tools](./confluent_cli/README.md) | Message consumption and Schema Registry verification tools |
 | **Repository Structure** | [Reorganization Guide](./REORGANIZATION.md) | Understanding the project layout and migration notes |
 

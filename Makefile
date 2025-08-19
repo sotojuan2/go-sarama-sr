@@ -241,6 +241,50 @@ consumer-topic: consumer-config ## Run consumer for specific topic (usage: make 
 consumer-help: ## Show consumer usage help
 	@./confluent_cli/schema_registry_consumer.sh --help
 
+## ACLs and Security Management
+
+setup-acls: ## Setup ACLs for Confluent Cloud (usage: make setup-acls KAFKA_SA=sa-xxx SR_SA=sa-yyy)
+	@echo "🔧 Setting up Confluent Cloud ACLs..."
+	@test -n "$(KAFKA_SA)" || (echo "❌ KAFKA_SA required. Usage: make setup-acls KAFKA_SA=sa-xxx SR_SA=sa-yyy" && exit 1)
+	@test -n "$(SR_SA)" || (echo "❌ SR_SA required. Usage: make setup-acls KAFKA_SA=sa-xxx SR_SA=sa-yyy" && exit 1)
+	@./scripts/setup-acls.sh -k $(KAFKA_SA) -s $(SR_SA)
+
+setup-acls-rbac: ## Setup RBAC for dedicated cluster (usage: make setup-acls-rbac KAFKA_SA=sa-xxx SR_SA=sa-yyy ENV=env-xxx)
+	@echo "🔧 Setting up Confluent Cloud RBAC..."
+	@test -n "$(KAFKA_SA)" || (echo "❌ KAFKA_SA required" && exit 1)
+	@test -n "$(SR_SA)" || (echo "❌ SR_SA required" && exit 1)
+	@test -n "$(ENV)" || (echo "❌ ENV required for RBAC" && exit 1)
+	@./scripts/setup-acls.sh -k $(KAFKA_SA) -s $(SR_SA) -e $(ENV) --rbac
+
+setup-acls-dry-run: ## Show ACLs commands without executing (usage: make setup-acls-dry-run KAFKA_SA=sa-xxx SR_SA=sa-yyy)
+	@echo "🔍 Dry run: ACLs setup commands..."
+	@test -n "$(KAFKA_SA)" || (echo "❌ KAFKA_SA required. Usage: make setup-acls-dry-run KAFKA_SA=sa-xxx SR_SA=sa-yyy" && exit 1)
+	@test -n "$(SR_SA)" || (echo "❌ SR_SA required. Usage: make setup-acls-dry-run KAFKA_SA=sa-xxx SR_SA=sa-yyy" && exit 1)
+	@./scripts/setup-acls.sh -k $(KAFKA_SA) -s $(SR_SA) --dry-run
+
+verify-acls: ## Verify current ACLs configuration
+	@echo "🔍 Verifying ACLs configuration..."
+	@test -n "$(KAFKA_SA)" || (echo "❌ KAFKA_SA required. Usage: make verify-acls KAFKA_SA=sa-xxx" && exit 1)
+	@echo "📋 Listing ACLs for service account: $(KAFKA_SA)"
+	@confluent kafka acl list --service-account $(KAFKA_SA) || echo "❌ Error listing ACLs. Check confluent CLI setup."
+
+acls-help: ## Show ACLs setup help
+	@echo "🔧 ACLs Setup Commands:"
+	@echo ""
+	@echo "Basic ACLs (for basic clusters):"
+	@echo "  make setup-acls KAFKA_SA=sa-pg9nnk5 SR_SA=sa-xq7ookz"
+	@echo ""
+	@echo "RBAC (for dedicated/standard clusters):"
+	@echo "  make setup-acls-rbac KAFKA_SA=sa-pg9nnk5 SR_SA=sa-xq7ookz ENV=env-9zj7y5"
+	@echo ""
+	@echo "Dry run (see commands without executing):"
+	@echo "  make setup-acls-dry-run KAFKA_SA=sa-pg9nnk5 SR_SA=sa-xq7ookz"
+	@echo ""
+	@echo "Verify configuration:"
+	@echo "  make verify-acls KAFKA_SA=sa-pg9nnk5"
+	@echo ""
+	@echo "📚 For detailed documentation, see: docs/confluent-acls-and-roles.md"
+
 # Help text
 $(shell echo "")
 $(shell echo "Quick Start:")
