@@ -3,7 +3,7 @@ package generator
 import (
 	"math/rand"
 	"time"
-	
+
 	pb "github.com/go-sarama-sr/producer/pb"
 )
 
@@ -43,10 +43,10 @@ func (g *ShoeGenerator) GenerateRandomShoe() *pb.Shoe {
 	model := models[g.rand.Intn(len(models))]
 	suffix := suffixes[g.rand.Intn(len(suffixes))]
 	name := model + " " + suffix
-	
+
 	// Price between $30 and $300
 	salePrice := 30.0 + g.rand.Float64()*270.0
-	
+
 	// Rating between 2.5 and 5.0
 	rating := 2.5 + g.rand.Float64()*2.5
 
