@@ -192,12 +192,19 @@ if ! command -v kafka-console-consumer &> /dev/null; then
     exit 1
 fi
 
-# Build the consumer command
+# Build the consumer command (using partition access to avoid consumer group issues)
+if [[ "$OFFSET_MODE" == "--from-beginning" ]]; then
+    OFFSET_VALUE="earliest"
+else
+    OFFSET_VALUE="latest"
+fi
+
 CONSUMER_CMD="kafka-console-consumer \
     --bootstrap-server $KAFKA_BOOTSTRAP_SERVERS \
     --topic $TOPIC \
+    --partition 0 \
+    --offset $OFFSET_VALUE \
     --consumer.config $CONFIG_FILE \
-    $OFFSET_MODE \
     --property value.deserializer=org.apache.kafka.common.serialization.BytesDeserializer \
     --property print.value=true \
     --property print.offset=true"

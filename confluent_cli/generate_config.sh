@@ -92,7 +92,7 @@ ssl.endpoint.identification.algorithm=https
 # Consumer specific settings (optional)
 auto.offset.reset=earliest
 enable.auto.commit=true
-group.id=schema-registry-console-consumer
+# group.id=console-consumer-dynamic  # Will be overridden by --group parameter
 EOF
 
 print_status "Generated configuration file: $CONFIG_FILE"

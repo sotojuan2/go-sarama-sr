@@ -34,6 +34,14 @@ vendor/
 .env.local
 .env.*.local
 
+# 🔐 SECURITY: Confluent Cloud credentials and config files
+# These files contain API keys and secrets - NEVER commit them!
+confluent_cli/*.config
+confluent_cli/cloud_sasl.config
+*.config
+*.sasl
+*.credentials
+
 # Editor directories and files
 .idea
 .vscode
